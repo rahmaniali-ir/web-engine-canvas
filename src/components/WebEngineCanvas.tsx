@@ -29,12 +29,12 @@ const WebEngineCanvas: React.FC<WebEngineCanvasProps> = ({
   // Initialize the tree service when manifest changes
   useEffect(() => {
     console.log("WebEngineCanvas: Manifest changed", manifest)
-    if (manifest?.root?.root) {
+    if (manifest?.root) {
       console.log(
         "WebEngineCanvas: Creating tree service with root",
-        manifest.root.root
+        manifest.root
       )
-      const service = new WebObjectTreeService(manifest.root.root)
+      const service = new WebObjectTreeService(manifest.root)
       setTreeService(service)
       console.log("WebEngineCanvas: Tree service created", service.getTree())
     } else {
@@ -133,14 +133,6 @@ const WebEngineCanvas: React.FC<WebEngineCanvasProps> = ({
     [onWebObjectUpdate]
   )
 
-  // Get canvas settings
-  const canvasSettings = manifest.settings || {
-    width: 800,
-    height: 600,
-    backgroundColor: "#ffffff",
-    responsive: false,
-  }
-
   // Debug logging
   if (treeService) {
     console.log(
@@ -155,10 +147,8 @@ const WebEngineCanvas: React.FC<WebEngineCanvasProps> = ({
       className={className}
       style={{
         position: "relative",
-        width: canvasSettings.width,
-        height: canvasSettings.height,
-        backgroundColor: canvasSettings.backgroundColor,
-        border: "1px solid #ccc",
+        width: "100%",
+        height: "100%",
         overflow: "auto",
         ...style,
       }}

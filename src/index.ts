@@ -22,7 +22,6 @@ export type {
   TransitionComponent,
   BoxShadowComponent,
   MaterialComponent,
-  WebObjectManifest,
   CanvasManifest,
   WebObjectContext,
   WebObjectTree,
