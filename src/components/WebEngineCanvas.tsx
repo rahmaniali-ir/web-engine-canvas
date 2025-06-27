@@ -1,10 +1,10 @@
 import React, { useRef, useEffect, useState, useCallback, useMemo } from "react"
-import { CanvasManifest, WebObject, WebObjectContext } from "../types"
+import { Manifest, WebObject, WebObjectContext } from "../types"
 import { WebObjectTreeService } from "../services/WebObjectTreeService"
 import WebObjectComponent from "./WebObject"
 
 export interface WebEngineCanvasProps {
-  manifest: CanvasManifest
+  manifest: Manifest
   className?: string
   style?: React.CSSProperties
   onCanvasReady?: (context: WebObjectContext) => void

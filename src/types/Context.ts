@@ -1,5 +1,5 @@
 import { WebObject } from "./WebObject"
-import { CanvasManifest } from "./Manifest"
+import { Manifest } from "./Manifest"
 
 export interface WebObjectTree {
   root: WebObject
@@ -10,7 +10,7 @@ export interface WebObjectTree {
 
 export interface WebObjectContext {
   canvas: HTMLDivElement | null
-  manifest: CanvasManifest
+  manifest: Manifest
   webObjectTree: WebObjectTree
   updateWebObject: (id: string, updates: Partial<WebObject>) => void
   addWebObject: (parentId: string, webObject: WebObject) => void

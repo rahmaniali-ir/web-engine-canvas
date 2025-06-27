@@ -1,6 +1,6 @@
 import { WebObject } from "./WebObject"
 
-export interface CanvasManifest {
+export interface Manifest {
   id: string
   name: string
   version: string
