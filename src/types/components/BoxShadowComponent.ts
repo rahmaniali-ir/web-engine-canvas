@@ -6,11 +6,3 @@ export interface BoxShadowComponent extends WebObjectComponent {
     boxShadow?: string
   }
 }
-
-export interface FilterComponent extends WebObjectComponent {
-  type: "filter"
-  config: {
-    filter?: string
-    backdropFilter?: string
-  }
-}

@@ -1,16 +1,5 @@
 import { WebObjectComponent } from "../WebObject"
 
-export interface BorderComponent extends WebObjectComponent {
-  type: "border"
-  config: {
-    border?: string
-    borderTop?: string
-    borderRight?: string
-    borderBottom?: string
-    borderLeft?: string
-  }
-}
-
 export interface BorderRadiusComponent extends WebObjectComponent {
   type: "borderRadius"
   config: {
