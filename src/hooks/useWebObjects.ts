@@ -25,7 +25,6 @@ export const useWebObjects = (context: WebObjectContext | null) => {
 
   const createHTMLElement = useCallback(
     (
-      tagName: string,
       meshConfig?: MeshComponent["config"],
       materialConfig?: MaterialComponent["config"],
       marginConfig?: MarginComponent["config"],
@@ -98,7 +97,7 @@ export const useWebObjects = (context: WebObjectContext | null) => {
 
       return {
         id: `element-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-        tagName,
+        type: "div",
         components,
         children: [],
       }
@@ -182,7 +181,7 @@ export const useWebObjects = (context: WebObjectContext | null) => {
         id: `container-${Date.now()}-${Math.random()
           .toString(36)
           .substr(2, 9)}`,
-        tagName: "div",
+        type: "div",
         components,
         children: [],
       }

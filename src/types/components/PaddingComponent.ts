@@ -1,12 +1,12 @@
-import { WebObjectComponent } from "../WebObject"
+import { WebObjectComponent } from "../WebObjectComponent"
 
 export interface PaddingComponent extends WebObjectComponent {
   type: "padding"
   config: {
     padding?: string
-    paddingTop?: string | number
-    paddingRight?: string | number
-    paddingBottom?: string | number
-    paddingLeft?: string | number
+    paddingTop?: string
+    paddingRight?: string
+    paddingBottom?: string
+    paddingLeft?: string
   }
 }

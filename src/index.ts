@@ -23,6 +23,8 @@ export type {
   BoxShadowComponent,
   MaterialComponent,
   Manifest,
+  Scene,
+  Route,
   WebObjectContext,
   WebObjectTree,
   FilterComponent,
@@ -31,3 +33,5 @@ export type {
 // Export services
 export { WebObjectTreeService } from "./services/WebObjectTreeService"
 export { WebObjectComponentService } from "./services/WebObjectComponentService"
+export { RouterService } from "./services/RouterService"
+export type { RouterState } from "./services/RouterService"

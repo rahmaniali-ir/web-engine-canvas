@@ -1,101 +1,191 @@
-import React, { useRef, useEffect, useCallback } from "react"
-import { WebObject as WebObjectType } from "../types"
+import React, { useRef, useEffect, useCallback, useMemo } from "react"
+import { WebObject, WebObjectContext } from "../types"
 import { WebObjectComponentService } from "../services/WebObjectComponentService"
+import LinkWebObjectComponent from "./specialized/LinkWebObject"
 
-interface WebObjectProps {
-  webObject: WebObjectType
-  onWebObjectReady?: (element: HTMLElement, webObject: WebObjectType) => void
-  onWebObjectUpdate?: (element: HTMLElement, webObject: WebObjectType) => void
+export interface WebObjectProps {
+  webObject: WebObject
+  context?: WebObjectContext
+  onWebObjectReady?: (element: HTMLElement, webObject: WebObject) => void
+  onWebObjectUpdate?: (element: HTMLElement, webObject: WebObject) => void
 }
 
 const WebObjectComponent: React.FC<WebObjectProps> = ({
   webObject,
+  context,
   onWebObjectReady,
   onWebObjectUpdate,
 }) => {
   const elementRef = useRef<HTMLElement>(null)
-  const componentService = useRef(new WebObjectComponentService())
-
-  // Add debug logging
-  console.log("Rendering WebObject:", webObject.id, webObject)
-
-  useEffect(() => {
-    const element = elementRef.current
-    if (element && onWebObjectReady) {
-      onWebObjectReady(element, webObject)
-    }
-  }, [webObject.id, onWebObjectReady])
-
-  useEffect(() => {
-    const element = elementRef.current
-    if (element && onWebObjectUpdate) {
-      onWebObjectUpdate(element, webObject)
-    }
-  }, [webObject, onWebObjectUpdate])
+  const componentService = useMemo(() => new WebObjectComponentService(), [])
 
   // Apply components to the element
-  useEffect(() => {
+  const applyComponents = useCallback(() => {
+    if (!elementRef.current || !webObject.components) return
+
     const element = elementRef.current
-    if (!element) return
+    const computedStyles = componentService.computeStyles(webObject.components)
 
-    // Apply all components
-    componentService.current.applyComponents(element, webObject)
-  }, [webObject.components])
+    // Apply computed styles
+    Object.assign(element.style, computedStyles)
+  }, [webObject.components, componentService])
 
-  // Memoized children rendering
-  const renderChildren = useCallback(() => {
-    console.log(
-      "Rendering children for:",
-      webObject.id,
-      webObject.children?.length || 0
-    )
-    if (!webObject.children || webObject.children.length === 0) {
-      console.log("No children to render for:", webObject.id)
+  // Apply components when they change
+  useEffect(() => {
+    applyComponents()
+  }, [applyComponents])
+
+  // Notify when element is ready
+  useEffect(() => {
+    if (elementRef.current && onWebObjectReady) {
+      onWebObjectReady(elementRef.current, webObject)
+    }
+  }, [webObject, onWebObjectReady])
+
+  // Handle specialized WebObject types
+  if (webObject.type === "link") {
+    if (!context) {
+      console.warn("LinkWebObject requires context for navigation")
       return null
     }
-    const renderedChildren = webObject.children.map(child => (
-      <WebObjectComponent
-        key={child.id}
-        webObject={child}
+    return (
+      <LinkWebObjectComponent
+        webObject={webObject}
+        context={context}
         onWebObjectReady={onWebObjectReady}
         onWebObjectUpdate={onWebObjectUpdate}
       />
-    ))
-    console.log("Rendered children for:", webObject.id, renderedChildren.length)
-    return renderedChildren
-  }, [webObject.children, onWebObjectReady, onWebObjectUpdate])
-
-  // Render based on WebObject tagName
-  const renderWebObject = () => {
-    const tagName = webObject.tagName || "div"
-
-    console.log("Rendering HTML element:", tagName)
-
-    // Create element props
-    const elementProps: any = {
-      ref: elementRef,
-    }
-
-    // Handle content property
-    if (webObject.content) {
-      elementProps.children = webObject.content
-    } else {
-      // Only add children from renderChildren() if there are actual WebObject children
-      const children = renderChildren()
-      if (children && webObject.children && webObject.children.length > 0) {
-        elementProps.children = children
-      }
-    }
-
-    console.log("Final element props:", elementProps)
-
-    // Use React.createElement directly instead of forwardRef
-    return React.createElement(tagName, elementProps)
+    )
   }
 
-  return renderWebObject()
-}
+  // Handle other specialized types
+  if (webObject.type === "button") {
+    return (
+      <button
+        ref={elementRef as React.RefObject<HTMLButtonElement>}
+        disabled={webObject.disabled}
+        onClick={event => {
+          if (webObject.onClick && context) {
+            const handler = context[
+              webObject.onClick as keyof WebObjectContext
+            ] as Function
+            if (handler) handler(event)
+          }
+        }}
+      >
+        {webObject.content && <span>{webObject.content}</span>}
+        {webObject.children?.map(child => (
+          <WebObjectComponent
+            key={child.id}
+            webObject={child}
+            context={context}
+            onWebObjectReady={onWebObjectReady}
+            onWebObjectUpdate={onWebObjectUpdate}
+          />
+        ))}
+      </button>
+    )
+  }
 
-WebObjectComponent.displayName = "WebObjectComponent"
+  if (webObject.type === "input") {
+    return (
+      <input
+        ref={elementRef as React.RefObject<HTMLInputElement>}
+        type={webObject.inputType}
+        placeholder={webObject.placeholder}
+        value={webObject.value}
+        disabled={webObject.disabled}
+        required={webObject.required}
+        onChange={event => {
+          if (webObject.onChange && context) {
+            const handler = context[
+              webObject.onChange as keyof WebObjectContext
+            ] as Function
+            if (handler) handler(event)
+          }
+        }}
+      />
+    )
+  }
+
+  if (webObject.type === "image") {
+    return (
+      <img
+        ref={elementRef as React.RefObject<HTMLImageElement>}
+        src={webObject.src}
+        alt={webObject.alt}
+        width={webObject.width}
+        height={webObject.height}
+      />
+    )
+  }
+
+  if (webObject.type === "heading") {
+    return (
+      <div ref={elementRef as React.RefObject<HTMLDivElement>}>
+        {webObject.content && <span>{webObject.content}</span>}
+        {webObject.children?.map(child => (
+          <WebObjectComponent
+            key={child.id}
+            webObject={child}
+            context={context}
+            onWebObjectReady={onWebObjectReady}
+            onWebObjectUpdate={onWebObjectUpdate}
+          />
+        ))}
+      </div>
+    )
+  }
+
+  if (webObject.type === "paragraph") {
+    return (
+      <p ref={elementRef as React.RefObject<HTMLParagraphElement>}>
+        {webObject.content && <span>{webObject.content}</span>}
+        {webObject.children?.map(child => (
+          <WebObjectComponent
+            key={child.id}
+            webObject={child}
+            context={context}
+            onWebObjectReady={onWebObjectReady}
+            onWebObjectUpdate={onWebObjectUpdate}
+          />
+        ))}
+      </p>
+    )
+  }
+
+  if (webObject.type === "span") {
+    return (
+      <span ref={elementRef as React.RefObject<HTMLSpanElement>}>
+        {webObject.content && <span>{webObject.content}</span>}
+        {webObject.children?.map(child => (
+          <WebObjectComponent
+            key={child.id}
+            webObject={child}
+            context={context}
+            onWebObjectReady={onWebObjectReady}
+            onWebObjectUpdate={onWebObjectUpdate}
+          />
+        ))}
+      </span>
+    )
+  }
+
+  // Default div WebObject
+  return (
+    <div ref={elementRef as React.RefObject<HTMLDivElement>}>
+      {webObject.content && <span>{webObject.content}</span>}
+      {webObject.children?.map(child => (
+        <WebObjectComponent
+          key={child.id}
+          webObject={child}
+          context={context}
+          onWebObjectReady={onWebObjectReady}
+          onWebObjectUpdate={onWebObjectUpdate}
+        />
+      ))}
+    </div>
+  )
+}
 
 export default WebObjectComponent

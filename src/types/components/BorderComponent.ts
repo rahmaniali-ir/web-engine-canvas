@@ -1,4 +1,4 @@
-import { WebObjectComponent } from "../WebObject"
+import { WebObjectComponent } from "../WebObjectComponent"
 
 export interface BorderComponent extends WebObjectComponent {
   type: "border"
@@ -8,5 +8,8 @@ export interface BorderComponent extends WebObjectComponent {
     borderRight?: string
     borderBottom?: string
     borderLeft?: string
+    borderWidth?: string
+    borderStyle?: string
+    borderColor?: string
   }
 }

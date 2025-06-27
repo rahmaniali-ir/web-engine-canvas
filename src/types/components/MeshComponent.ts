@@ -1,19 +1,10 @@
-import { WebObjectComponent } from "../WebObject"
+import { WebObjectComponent } from "../WebObjectComponent"
 
 export interface MeshComponent extends WebObjectComponent {
   type: "mesh"
   config: {
     display?: string
-    position?: "static" | "relative" | "absolute" | "fixed" | "sticky"
-    top?: string | number
-    right?: string | number
-    bottom?: string | number
-    left?: string | number
-    width?: string | number
-    height?: string | number
-    maxWidth?: string | number
-    zIndex?: number
-    flexDirection?: "row" | "row-reverse" | "column" | "column-reverse"
+    flexDirection?: "row" | "column" | "row-reverse" | "column-reverse"
     justifyContent?:
       | "flex-start"
       | "flex-end"
@@ -22,7 +13,19 @@ export interface MeshComponent extends WebObjectComponent {
       | "space-around"
       | "space-evenly"
     alignItems?: "stretch" | "flex-start" | "flex-end" | "center" | "baseline"
-    gap?: string | number
+    gap?: string
+    width?: string | number
+    height?: string | number
+    minWidth?: string | number
+    minHeight?: string | number
+    maxWidth?: string | number
+    maxHeight?: string | number
+    position?: "static" | "relative" | "absolute" | "fixed" | "sticky"
+    top?: string | number
+    left?: string | number
+    right?: string | number
+    bottom?: string | number
+    zIndex?: number
     gridTemplateColumns?: string
   }
 }

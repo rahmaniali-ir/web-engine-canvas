@@ -12,6 +12,7 @@ import {
   BoxShadowComponent,
   FilterComponent,
 } from "../types"
+import { WebObjectComponent } from "../types/WebObjectComponent"
 
 export class WebObjectComponentService {
   private componentRegistry: Map<
@@ -206,6 +207,30 @@ export class WebObjectComponentService {
         handler(element, component.config)
       }
     })
+  }
+
+  computeStyles(components: WebObjectComponent[]): React.CSSProperties {
+    const styles: React.CSSProperties = {}
+
+    components.forEach(component => {
+      const handler = this.componentRegistry.get(component.type)
+      if (handler) {
+        // Create a temporary element to apply styles
+        const tempElement = document.createElement("div")
+        handler(tempElement, component.config)
+
+        // Copy computed styles to our styles object manually
+        for (let i = 0; i < tempElement.style.length; i++) {
+          const property = tempElement.style[i]
+          const value = tempElement.style.getPropertyValue(property)
+          if (value) {
+            ;(styles as any)[property] = value
+          }
+        }
+      }
+    })
+
+    return styles
   }
 
   registerComponent(

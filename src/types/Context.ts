@@ -1,5 +1,6 @@
 import { WebObject } from "./WebObject"
 import { Manifest } from "./Manifest"
+import { RouterState } from "../services/RouterService"
 
 export interface WebObjectTree {
   root: WebObject
@@ -12,6 +13,10 @@ export interface WebObjectContext {
   canvas: HTMLDivElement | null
   manifest: Manifest
   webObjectTree: WebObjectTree
+  routerState: RouterState
+  navigate: (path: string) => void
+  goBack: () => void
+  goForward: () => void
   updateWebObject: (id: string, updates: Partial<WebObject>) => void
   addWebObject: (parentId: string, webObject: WebObject) => void
   removeWebObject: (id: string) => void

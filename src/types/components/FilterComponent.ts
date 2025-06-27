@@ -1,4 +1,4 @@
-import { WebObjectComponent } from "../WebObject"
+import { WebObjectComponent } from "../WebObjectComponent"
 
 export interface FilterComponent extends WebObjectComponent {
   type: "filter"

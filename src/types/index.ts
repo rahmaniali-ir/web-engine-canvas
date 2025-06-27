@@ -2,6 +2,7 @@
 
 // Core types
 export * from "./WebObject"
+export * from "./WebObjectComponent"
 
 // Component types
 export * from "./components"

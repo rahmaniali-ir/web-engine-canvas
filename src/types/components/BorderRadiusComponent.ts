@@ -1,4 +1,4 @@
-import { WebObjectComponent } from "../WebObject"
+import { WebObjectComponent } from "../WebObjectComponent"
 
 export interface BorderRadiusComponent extends WebObjectComponent {
   type: "borderRadius"
@@ -6,7 +6,7 @@ export interface BorderRadiusComponent extends WebObjectComponent {
     borderRadius?: string
     borderTopLeftRadius?: string
     borderTopRightRadius?: string
-    borderBottomRightRadius?: string
     borderBottomLeftRadius?: string
+    borderBottomRightRadius?: string
   }
 }
