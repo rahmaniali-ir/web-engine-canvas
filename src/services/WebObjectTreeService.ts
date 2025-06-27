@@ -217,7 +217,11 @@ export class WebObjectTreeService {
   }
 
   findNodesByType(type: string): WebObject[] {
-    return this.findNodes(node => node.type === type)
+    return this.findNodes(
+      node =>
+        Array.isArray(node.components) &&
+        node.components.some(c => c.type === type)
+    )
   }
 
   findNodesByTagName(tagName: string): WebObject[] {

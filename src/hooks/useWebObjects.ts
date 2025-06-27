@@ -1,46 +1,195 @@
 import { useState, useCallback } from "react"
-import { WebObject, WebObjectContext } from "../types"
+import {
+  WebObject,
+  WebObjectContext,
+  MeshComponent,
+  MaterialComponent,
+  MarginComponent,
+  PaddingComponent,
+  BorderComponent,
+  BorderRadiusComponent,
+  TypographyComponent,
+  InteractionComponent,
+  TransitionComponent,
+  BoxShadowComponent,
+  FilterComponent,
+} from "../types"
+import { WebObjectComponentService } from "../services/WebObjectComponentService"
 
 export const useWebObjects = (context: WebObjectContext | null) => {
   const [selectedWebObjectId, setSelectedWebObjectId] = useState<string | null>(
     null
   )
 
-  // Create a new WebObject
-  const createWebObject = useCallback(
+  const componentService = new WebObjectComponentService()
+
+  const createHTMLElement = useCallback(
     (
-      type: "element" | "component" | "container",
-      options: {
-        tagName?: string
-        componentName?: string
-        props?: Record<string, any>
-        style?: Record<string, any>
-        position?: { x: number; y: number; z?: number }
-        size?: { width: number; height: number }
-        metadata?: Record<string, any>
-      } = {}
+      tagName: string,
+      meshConfig?: MeshComponent["config"],
+      materialConfig?: MaterialComponent["config"],
+      marginConfig?: MarginComponent["config"],
+      paddingConfig?: PaddingComponent["config"],
+      borderConfig?: BorderComponent["config"],
+      borderRadiusConfig?: BorderRadiusComponent["config"],
+      typographyConfig?: TypographyComponent["config"],
+      interactionConfig?: InteractionComponent["config"],
+      transitionConfig?: TransitionComponent["config"],
+      boxShadowConfig?: BoxShadowComponent["config"],
+      filterConfig?: FilterComponent["config"]
     ): WebObject => {
-      const id = `webobject-${Date.now()}-${Math.random()
-        .toString(36)
-        .substr(2, 9)}`
+      const components: any[] = []
+
+      if (meshConfig) {
+        components.push(componentService.createMeshComponent(meshConfig))
+      }
+
+      if (marginConfig) {
+        components.push(componentService.createMarginComponent(marginConfig))
+      }
+
+      if (paddingConfig) {
+        components.push(componentService.createPaddingComponent(paddingConfig))
+      }
+
+      if (borderConfig) {
+        components.push(componentService.createBorderComponent(borderConfig))
+      }
+
+      if (borderRadiusConfig) {
+        components.push(
+          componentService.createBorderRadiusComponent(borderRadiusConfig)
+        )
+      }
+
+      if (typographyConfig) {
+        components.push(
+          componentService.createTypographyComponent(typographyConfig)
+        )
+      }
+
+      if (interactionConfig) {
+        components.push(
+          componentService.createInteractionComponent(interactionConfig)
+        )
+      }
+
+      if (transitionConfig) {
+        components.push(
+          componentService.createTransitionComponent(transitionConfig)
+        )
+      }
+
+      if (boxShadowConfig) {
+        components.push(
+          componentService.createBoxShadowComponent(boxShadowConfig)
+        )
+      }
+
+      if (filterConfig) {
+        components.push(componentService.createFilterComponent(filterConfig))
+      }
+
+      if (materialConfig) {
+        components.push(
+          componentService.createMaterialComponent(materialConfig)
+        )
+      }
 
       return {
-        id,
-        type,
-        tagName: options.tagName,
-        componentName: options.componentName,
-        props: options.props || {},
-        style: options.style || {},
-        position: options.position,
-        size: options.size,
+        id: `element-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        tagName,
+        components,
         children: [],
-        metadata: options.metadata || {},
       }
     },
     []
   )
 
-  // Add a WebObject to the tree
+  const createContainer = useCallback(
+    (
+      meshConfig?: MeshComponent["config"],
+      materialConfig?: MaterialComponent["config"],
+      marginConfig?: MarginComponent["config"],
+      paddingConfig?: PaddingComponent["config"],
+      borderConfig?: BorderComponent["config"],
+      borderRadiusConfig?: BorderRadiusComponent["config"],
+      typographyConfig?: TypographyComponent["config"],
+      interactionConfig?: InteractionComponent["config"],
+      transitionConfig?: TransitionComponent["config"],
+      boxShadowConfig?: BoxShadowComponent["config"],
+      filterConfig?: FilterComponent["config"]
+    ): WebObject => {
+      const components: any[] = []
+
+      if (meshConfig) {
+        components.push(componentService.createMeshComponent(meshConfig))
+      }
+
+      if (marginConfig) {
+        components.push(componentService.createMarginComponent(marginConfig))
+      }
+
+      if (paddingConfig) {
+        components.push(componentService.createPaddingComponent(paddingConfig))
+      }
+
+      if (borderConfig) {
+        components.push(componentService.createBorderComponent(borderConfig))
+      }
+
+      if (borderRadiusConfig) {
+        components.push(
+          componentService.createBorderRadiusComponent(borderRadiusConfig)
+        )
+      }
+
+      if (typographyConfig) {
+        components.push(
+          componentService.createTypographyComponent(typographyConfig)
+        )
+      }
+
+      if (interactionConfig) {
+        components.push(
+          componentService.createInteractionComponent(interactionConfig)
+        )
+      }
+
+      if (transitionConfig) {
+        components.push(
+          componentService.createTransitionComponent(transitionConfig)
+        )
+      }
+
+      if (boxShadowConfig) {
+        components.push(
+          componentService.createBoxShadowComponent(boxShadowConfig)
+        )
+      }
+
+      if (filterConfig) {
+        components.push(componentService.createFilterComponent(filterConfig))
+      }
+
+      if (materialConfig) {
+        components.push(
+          componentService.createMaterialComponent(materialConfig)
+        )
+      }
+
+      return {
+        id: `container-${Date.now()}-${Math.random()
+          .toString(36)
+          .substr(2, 9)}`,
+        tagName: "div",
+        components,
+        children: [],
+      }
+    },
+    []
+  )
+
   const addWebObject = useCallback(
     (parentId: string, webObject: WebObject) => {
       if (context) {
@@ -50,17 +199,6 @@ export const useWebObjects = (context: WebObjectContext | null) => {
     [context]
   )
 
-  // Update a WebObject
-  const updateWebObject = useCallback(
-    (id: string, updates: Partial<WebObject>) => {
-      if (context) {
-        context.updateWebObject(id, updates)
-      }
-    },
-    [context]
-  )
-
-  // Remove a WebObject
   const removeWebObject = useCallback(
     (id: string) => {
       if (context) {
@@ -70,7 +208,15 @@ export const useWebObjects = (context: WebObjectContext | null) => {
     [context]
   )
 
-  // Move a WebObject to a new parent
+  const updateWebObject = useCallback(
+    (id: string, updates: Partial<WebObject>) => {
+      if (context) {
+        context.updateWebObject(id, updates)
+      }
+    },
+    [context]
+  )
+
   const moveWebObject = useCallback(
     (id: string, newParentId: string) => {
       if (context) {
@@ -80,9 +226,8 @@ export const useWebObjects = (context: WebObjectContext | null) => {
     [context]
   )
 
-  // Get a WebObject by ID
   const getWebObject = useCallback(
-    (id: string): WebObject | undefined => {
+    (id: string) => {
       if (context) {
         return context.webObjectTree.nodes.get(id)
       }
@@ -91,109 +236,12 @@ export const useWebObjects = (context: WebObjectContext | null) => {
     [context]
   )
 
-  // Get children of a WebObject
-  const getChildren = useCallback(
-    (id: string): WebObject[] => {
-      if (context) {
-        const childrenIds = context.webObjectTree.childrenMap.get(id) || []
-        return childrenIds
-          .map(childId => context.webObjectTree.nodes.get(childId)!)
-          .filter(Boolean)
-      }
-      return []
-    },
-    [context]
-  )
-
-  // Get parent of a WebObject
-  const getParent = useCallback(
-    (id: string): WebObject | undefined => {
-      if (context) {
-        const parentId = context.webObjectTree.parentMap.get(id)
-        return parentId ? context.webObjectTree.nodes.get(parentId) : undefined
-      }
-      return undefined
-    },
-    [context]
-  )
-
-  // Find WebObjects by type
-  const findWebObjectsByType = useCallback(
-    (type: string): WebObject[] => {
-      if (context) {
-        const results: WebObject[] = []
-        context.webObjectTree.nodes.forEach(node => {
-          if (node.type === type) {
-            results.push(node)
-          }
-        })
-        return results
-      }
-      return []
-    },
-    [context]
-  )
-
-  // Find WebObjects by tag name
-  const findWebObjectsByTagName = useCallback(
-    (tagName: string): WebObject[] => {
-      if (context) {
-        const results: WebObject[] = []
-        context.webObjectTree.nodes.forEach(node => {
-          if (node.tagName === tagName) {
-            results.push(node)
-          }
-        })
-        return results
-      }
-      return []
-    },
-    [context]
-  )
-
-  // Create common WebObject types
-  const createHTMLElement = useCallback(
-    (
-      tagName: string,
-      props: Record<string, any> = {},
-      style: Record<string, any> = {}
-    ): WebObject => {
-      return createWebObject("element", {
-        tagName,
-        props,
-        style,
-      })
-    },
-    [createWebObject]
-  )
-
-  const createContainer = useCallback(
-    (
-      props: Record<string, any> = {},
-      style: Record<string, any> = {}
-    ): WebObject => {
-      return createWebObject("container", {
-        props,
-        style,
-      })
-    },
-    [createWebObject]
-  )
-
-  const createComponent = useCallback(
-    (
-      componentName: string,
-      props: Record<string, any> = {},
-      style: Record<string, any> = {}
-    ): WebObject => {
-      return createWebObject("component", {
-        componentName,
-        props,
-        style,
-      })
-    },
-    [createWebObject]
-  )
+  const getAllWebObjects = useCallback(() => {
+    if (context) {
+      return Array.from(context.webObjectTree.nodes.values())
+    }
+    return []
+  }, [context])
 
   return {
     // State
@@ -201,22 +249,17 @@ export const useWebObjects = (context: WebObjectContext | null) => {
     setSelectedWebObjectId,
 
     // Core operations
-    createWebObject,
+    createHTMLElement,
+    createContainer,
     addWebObject,
-    updateWebObject,
     removeWebObject,
+    updateWebObject,
     moveWebObject,
 
     // Queries
     getWebObject,
-    getChildren,
-    getParent,
-    findWebObjectsByType,
-    findWebObjectsByTagName,
+    getAllWebObjects,
 
-    // Convenience creators
-    createHTMLElement,
-    createContainer,
-    createComponent,
+    componentService,
   }
 }

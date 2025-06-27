@@ -1,554 +1,567 @@
-import React, { useState, useCallback } from "react"
-import { createRoot } from "react-dom/client"
-import {
-  WebEngineCanvas,
-  useWebObjects,
-  CanvasManifest,
-  WebObject,
-} from "../src/index"
+import React, { useCallback } from "react"
+import ReactDOM from "react-dom/client"
+import { WebEngineCanvas } from "../src"
 
-// Create a simple test manifest to debug rendering
-const sampleManifest: CanvasManifest = {
-  id: "landing-canvas",
-  name: "Landing Page Canvas",
+const sampleManifest = {
+  id: "webengine-landing",
+  name: "WebEngine Landing Page",
   version: "1.0.0",
-  description: "A modern landing page demo for the WebObject system.",
-  author: "Demo Author",
+  description: "Modern landing page showcasing WebEngine Canvas",
+  author: "WebEngine Team",
   settings: {
     width: window.innerWidth,
     height: window.innerHeight,
-    backgroundColor: "#f8fafc",
+    backgroundColor: "#ffffff",
     responsive: true,
   },
   root: {
-    id: "root-manifest",
-    name: "Landing Root",
+    id: "landing-manifest",
+    name: "Landing Page",
     version: "1.0.0",
     root: {
-      id: "main-container",
-      type: "container",
-      style: {
-        minHeight: "100vh",
-        width: "100%",
-        fontFamily: "'Segoe UI', Arial, sans-serif",
-        backgroundColor: "#f8fafc",
-        color: "#222",
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        margin: 0,
-        padding: 0,
-      },
-      children: [
-        // Navigation Bar
+      id: "root",
+      tagName: "div",
+      components: [
         {
-          id: "navbar",
-          type: "element",
-          tagName: "nav",
-          style: {
-            width: "100%",
-            backgroundColor: "#fff",
-            borderBottom: "1px solid #e5e7eb",
-            padding: "24px 0 16px 0",
+          id: "root-mesh",
+          type: "mesh",
+          config: {
             display: "flex",
-            justifyContent: "center",
-            position: "sticky",
-            top: 0,
-            zIndex: 10,
+            flexDirection: "column",
+            width: "100%",
+            minHeight: "100vh",
           },
+        },
+      ],
+      children: [
+        // Header
+        {
+          id: "header",
+          tagName: "header",
+          components: [
+            {
+              id: "header-mesh",
+              type: "mesh",
+              config: {
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                position: "fixed",
+                top: 0,
+                left: 0,
+                right: 0,
+                zIndex: 1000,
+              },
+            },
+            {
+              id: "header-padding",
+              type: "padding",
+              config: {
+                padding: "1rem 2rem",
+              },
+            },
+            {
+              id: "header-material",
+              type: "material",
+              config: {
+                backgroundColor: "rgba(255, 255, 255, 0.95)",
+                backdropFilter: "blur(10px)",
+              },
+            },
+            {
+              id: "header-boxShadow",
+              type: "boxShadow",
+              config: {
+                boxShadow: "0 2px 20px rgba(0, 0, 0, 0.1)",
+              },
+            },
+          ],
           children: [
             {
-              id: "nav-content",
-              type: "container",
-              style: {
-                width: "90%",
-                maxWidth: "1100px",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-              },
-              children: [
+              id: "logo",
+              tagName: "div",
+              components: [
                 {
-                  id: "nav-logo",
-                  type: "element",
-                  tagName: "span",
-                  props: { children: "WebEngine" },
-                  style: {
-                    fontWeight: "bold",
-                    fontSize: "1.5rem",
-                    color: "#2563eb",
+                  id: "logo-typography",
+                  type: "typography",
+                  config: {
+                    fontSize: "1.2rem",
+                    fontWeight: 700,
+                    color: "#1a1a1a",
                   },
                 },
+              ],
+              children: [],
+              content: "WebEngine",
+            },
+            {
+              id: "nav",
+              tagName: "nav",
+              components: [
                 {
-                  id: "nav-links",
-                  type: "container",
-                  style: {
+                  id: "nav-mesh",
+                  type: "mesh",
+                  config: {
                     display: "flex",
-                    gap: "32px",
+                    gap: "2rem",
                   },
-                  children: [
+                },
+              ],
+              children: [
+                {
+                  id: "nav-link-1",
+                  tagName: "a",
+                  components: [
                     {
-                      id: "nav-link-features",
-                      type: "element",
-                      tagName: "a",
-                      props: { href: "#features", children: "Features" },
-                      style: {
+                      id: "nav-link-1-typography",
+                      type: "typography",
+                      config: {
+                        color: "#666",
                         textDecoration: "none",
-                        color: "#222",
-                        fontWeight: 500,
-                      },
-                    },
-                    {
-                      id: "nav-link-about",
-                      type: "element",
-                      tagName: "a",
-                      props: { href: "#about", children: "About" },
-                      style: {
-                        textDecoration: "none",
-                        color: "#222",
-                        fontWeight: 500,
-                      },
-                    },
-                    {
-                      id: "nav-link-contact",
-                      type: "element",
-                      tagName: "a",
-                      props: { href: "#contact", children: "Contact" },
-                      style: {
-                        textDecoration: "none",
-                        color: "#222",
                         fontWeight: 500,
                       },
                     },
                   ],
+                  children: [],
+                  content: "Home",
+                },
+                {
+                  id: "nav-link-2",
+                  tagName: "a",
+                  components: [
+                    {
+                      id: "nav-link-2-typography",
+                      type: "typography",
+                      config: {
+                        color: "#666",
+                        textDecoration: "none",
+                        fontWeight: 500,
+                      },
+                    },
+                  ],
+                  children: [],
+                  content: "Features",
                 },
               ],
             },
           ],
         },
+
         // Hero Section
         {
-          id: "hero-section",
-          type: "container",
-          style: {
-            width: "100%",
-            background: "linear-gradient(90deg, #2563eb 0%, #60a5fa 100%)",
-            color: "#fff",
-            padding: "80px 0 60px 0",
-            display: "flex",
-            justifyContent: "center",
-          },
-          children: [
+          id: "hero",
+          tagName: "section",
+          components: [
             {
-              id: "hero-content",
-              type: "container",
-              style: {
-                width: "90%",
-                maxWidth: "1100px",
+              id: "hero-mesh",
+              type: "mesh",
+              config: {
                 display: "flex",
                 flexDirection: "column",
                 alignItems: "center",
+                justifyContent: "center",
+                minHeight: "100vh",
+              },
+            },
+            {
+              id: "hero-typography",
+              type: "typography",
+              config: {
                 textAlign: "center",
               },
-              children: [
+            },
+            {
+              id: "hero-padding",
+              type: "padding",
+              config: {
+                padding: "8rem 2rem",
+              },
+            },
+            {
+              id: "hero-material",
+              type: "material",
+              config: {
+                background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+              },
+            },
+          ],
+          children: [
+            {
+              id: "hero-title",
+              tagName: "h1",
+              components: [
                 {
-                  id: "hero-title",
-                  type: "element",
-                  tagName: "h1",
-                  props: {
-                    children:
-                      "Build Dynamic Web Experiences with WebEngineCanvas",
-                  },
-                  style: {
-                    fontSize: "2.8rem",
+                  id: "hero-title-typography",
+                  type: "typography",
+                  config: {
+                    fontSize: "4rem",
                     fontWeight: 700,
-                    marginBottom: "20px",
-                  },
-                },
-                {
-                  id: "hero-desc",
-                  type: "element",
-                  tagName: "p",
-                  props: {
-                    children:
-                      "A React library for rendering and managing complex UI trees with ease.",
-                  },
-                  style: {
-                    fontSize: "1.3rem",
-                    marginBottom: "32px",
-                    color: "#e0e7ef",
-                  },
-                },
-                {
-                  id: "hero-cta",
-                  type: "element",
-                  tagName: "a",
-                  props: { href: "#features", children: "Get Started" },
-                  style: {
-                    display: "inline-block",
-                    backgroundColor: "#fff",
-                    color: "#2563eb",
-                    fontWeight: 600,
-                    padding: "14px 36px",
-                    borderRadius: "8px",
-                    fontSize: "1.1rem",
-                    textDecoration: "none",
-                    boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
-                    transition: "background 0.2s, color 0.2s",
+                    color: "white",
+                    marginBottom: "1.5rem",
                   },
                 },
               ],
+              children: [],
+              content: "Build Amazing Web Experiences",
+            },
+            {
+              id: "hero-subtitle",
+              tagName: "p",
+              components: [
+                {
+                  id: "hero-subtitle-typography",
+                  type: "typography",
+                  config: {
+                    fontSize: "1.3rem",
+                    color: "rgba(255, 255, 255, 0.9)",
+                    maxWidth: "600px",
+                    marginBottom: "3rem",
+                  },
+                },
+              ],
+              children: [],
+              content:
+                "WebEngine Canvas is a powerful React library for creating dynamic, component-based web interfaces.",
+            },
+            {
+              id: "hero-button",
+              tagName: "button",
+              components: [
+                {
+                  id: "hero-button-borderRadius",
+                  type: "borderRadius",
+                  config: {
+                    borderRadius: "50px",
+                  },
+                },
+                {
+                  id: "hero-button-padding",
+                  type: "padding",
+                  config: {
+                    padding: "1rem 2.5rem",
+                  },
+                },
+                {
+                  id: "hero-button-material",
+                  type: "material",
+                  config: {
+                    backgroundColor: "white",
+                    color: "#667eea",
+                  },
+                },
+                {
+                  id: "hero-button-typography",
+                  type: "typography",
+                  config: {
+                    fontSize: "1.1rem",
+                    fontWeight: 600,
+                  },
+                },
+              ],
+              children: [],
+              content: "Get Started",
             },
           ],
         },
+
         // Features Section
         {
-          id: "features-section",
-          type: "container",
-          style: {
-            width: "100%",
-            backgroundColor: "#f1f5f9",
-            padding: "80px 0 60px 0",
-            display: "flex",
-            justifyContent: "center",
-          },
-          props: { id: "features" },
-          children: [
+          id: "features",
+          tagName: "section",
+          components: [
             {
-              id: "features-content",
-              type: "container",
-              style: {
-                width: "90%",
-                maxWidth: "1100px",
+              id: "features-mesh",
+              type: "mesh",
+              config: {
                 display: "flex",
                 flexDirection: "column",
                 alignItems: "center",
+                gap: "2rem",
               },
-              children: [
-                {
-                  id: "features-title",
-                  type: "element",
-                  tagName: "h2",
-                  props: { children: "Features" },
-                  style: {
-                    fontSize: "2.2rem",
-                    fontWeight: 700,
-                    marginBottom: "40px",
-                  },
-                },
-                {
-                  id: "features-list",
-                  type: "container",
-                  style: {
-                    display: "flex",
-                    gap: "32px",
-                    flexWrap: "wrap",
-                    justifyContent: "center",
-                  },
-                  children: [
-                    {
-                      id: "feature-1",
-                      type: "container",
-                      style: {
-                        backgroundColor: "#fff",
-                        borderRadius: "12px",
-                        boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
-                        padding: "32px 28px",
-                        minWidth: "260px",
-                        maxWidth: "320px",
-                        textAlign: "center",
-                        marginBottom: "24px",
-                      },
-                      children: [
-                        {
-                          id: "feature-1-title",
-                          type: "element",
-                          tagName: "h3",
-                          props: { children: "Declarative UI Trees" },
-                          style: {
-                            fontSize: "1.3rem",
-                            fontWeight: 600,
-                            marginBottom: "12px",
-                          },
-                        },
-                        {
-                          id: "feature-1-desc",
-                          type: "element",
-                          tagName: "p",
-                          props: {
-                            children:
-                              "Describe your UI as a tree of objects and let WebEngineCanvas handle the rendering.",
-                          },
-                          style: { color: "#555", fontSize: "1rem" },
-                        },
-                      ],
-                    },
-                    {
-                      id: "feature-2",
-                      type: "container",
-                      style: {
-                        backgroundColor: "#fff",
-                        borderRadius: "12px",
-                        boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
-                        padding: "32px 28px",
-                        minWidth: "260px",
-                        maxWidth: "320px",
-                        textAlign: "center",
-                        marginBottom: "24px",
-                      },
-                      children: [
-                        {
-                          id: "feature-2-title",
-                          type: "element",
-                          tagName: "h3",
-                          props: { children: "Dynamic Updates" },
-                          style: {
-                            fontSize: "1.3rem",
-                            fontWeight: 600,
-                            marginBottom: "12px",
-                          },
-                        },
-                        {
-                          id: "feature-2-desc",
-                          type: "element",
-                          tagName: "p",
-                          props: {
-                            children:
-                              "Easily update, add, or remove objects in real time with full reactivity.",
-                          },
-                          style: { color: "#555", fontSize: "1rem" },
-                        },
-                      ],
-                    },
-                    {
-                      id: "feature-3",
-                      type: "container",
-                      style: {
-                        backgroundColor: "#fff",
-                        borderRadius: "12px",
-                        boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
-                        padding: "32px 28px",
-                        minWidth: "260px",
-                        maxWidth: "320px",
-                        textAlign: "center",
-                        marginBottom: "24px",
-                      },
-                      children: [
-                        {
-                          id: "feature-3-title",
-                          type: "element",
-                          tagName: "h3",
-                          props: { children: "Composable & Extensible" },
-                          style: {
-                            fontSize: "1.3rem",
-                            fontWeight: 600,
-                            marginBottom: "12px",
-                          },
-                        },
-                        {
-                          id: "feature-3-desc",
-                          type: "element",
-                          tagName: "p",
-                          props: {
-                            children:
-                              "Compose complex layouts and extend with your own components.",
-                          },
-                          style: { color: "#555", fontSize: "1rem" },
-                        },
-                      ],
-                    },
-                  ],
-                },
-              ],
+            },
+            {
+              id: "features-padding",
+              type: "padding",
+              config: {
+                padding: "6rem 2rem",
+              },
+            },
+            {
+              id: "features-material",
+              type: "material",
+              config: {
+                backgroundColor: "#f8fafc",
+              },
             },
           ],
-        },
-        // About Section
-        {
-          id: "about-section",
-          type: "container",
-          style: {
-            width: "100%",
-            backgroundColor: "#fff",
-            padding: "80px 0 60px 0",
-            display: "flex",
-            justifyContent: "center",
-          },
-          props: { id: "about" },
           children: [
             {
-              id: "about-content",
-              type: "container",
-              style: {
-                width: "90%",
-                maxWidth: "900px",
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                textAlign: "center",
-              },
-              children: [
+              id: "features-title",
+              tagName: "h2",
+              components: [
                 {
-                  id: "about-title",
-                  type: "element",
-                  tagName: "h2",
-                  props: { children: "About WebEngineCanvas" },
-                  style: {
-                    fontSize: "2.2rem",
+                  id: "features-title-typography",
+                  type: "typography",
+                  config: {
+                    fontSize: "3rem",
                     fontWeight: 700,
-                    marginBottom: "32px",
-                  },
-                },
-                {
-                  id: "about-desc",
-                  type: "element",
-                  tagName: "p",
-                  props: {
-                    children:
-                      "WebEngineCanvas is designed to help you build, manage, and update complex UI trees in React with a simple manifest-driven approach. Perfect for dashboards, editors, and dynamic web apps.",
-                  },
-                  style: {
-                    fontSize: "1.1rem",
-                    color: "#444",
-                    marginBottom: "24px",
-                  },
-                },
-                {
-                  id: "about-learn-more",
-                  type: "element",
-                  tagName: "a",
-                  props: { href: "#", children: "Learn More" },
-                  style: {
-                    display: "inline-block",
-                    backgroundColor: "#2563eb",
-                    color: "#fff",
-                    fontWeight: 600,
-                    padding: "12px 32px",
-                    borderRadius: "8px",
-                    fontSize: "1rem",
-                    textDecoration: "none",
-                    marginTop: "12px",
+                    color: "#1a1a1a",
+                    textAlign: "center",
+                    marginBottom: "4rem",
                   },
                 },
               ],
+              children: [],
+              content: "Why Choose WebEngine?",
             },
-          ],
-        },
-        // Contact Section
-        {
-          id: "contact-section",
-          type: "container",
-          style: {
-            width: "100%",
-            backgroundColor: "#f1f5f9",
-            padding: "80px 0 60px 0",
-            display: "flex",
-            justifyContent: "center",
-          },
-          props: { id: "contact" },
-          children: [
             {
-              id: "contact-content",
-              type: "container",
-              style: {
-                width: "90%",
-                maxWidth: "700px",
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                textAlign: "center",
-              },
-              children: [
+              id: "features-grid",
+              tagName: "div",
+              components: [
                 {
-                  id: "contact-title",
-                  type: "element",
-                  tagName: "h2",
-                  props: { children: "Contact Us" },
-                  style: {
-                    fontSize: "2.2rem",
-                    fontWeight: 700,
-                    marginBottom: "32px",
-                  },
-                },
-                {
-                  id: "contact-desc",
-                  type: "element",
-                  tagName: "p",
-                  props: {
-                    children:
-                      "Have questions or want to get in touch? Fill out the form below or email us at demo@example.com.",
-                  },
-                  style: {
-                    fontSize: "1.1rem",
-                    color: "#444",
-                    marginBottom: "24px",
-                  },
-                },
-                {
-                  id: "contact-form",
-                  type: "container",
-                  style: {
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: "16px",
+                  id: "features-grid-mesh",
+                  type: "mesh",
+                  config: {
+                    display: "grid",
+                    gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",
+                    gap: "2rem",
+                    maxWidth: "1000px",
                     width: "100%",
-                    maxWidth: "400px",
-                    margin: "0 auto",
                   },
+                },
+              ],
+              children: [
+                {
+                  id: "feature-1",
+                  tagName: "div",
+                  components: [
+                    {
+                      id: "feature-1-borderRadius",
+                      type: "borderRadius",
+                      config: {
+                        borderRadius: "15px",
+                      },
+                    },
+                    {
+                      id: "feature-1-typography",
+                      type: "typography",
+                      config: {
+                        textAlign: "center",
+                      },
+                    },
+                    {
+                      id: "feature-1-padding",
+                      type: "padding",
+                      config: {
+                        padding: "2rem",
+                      },
+                    },
+                    {
+                      id: "feature-1-material",
+                      type: "material",
+                      config: {
+                        backgroundColor: "white",
+                      },
+                    },
+                    {
+                      id: "feature-1-boxShadow",
+                      type: "boxShadow",
+                      config: {
+                        boxShadow: "0 10px 30px rgba(0, 0, 0, 0.1)",
+                      },
+                    },
+                  ],
                   children: [
                     {
-                      id: "contact-input-name",
-                      type: "element",
-                      tagName: "input",
-                      props: { type: "text", placeholder: "Your Name" },
-                      style: {
-                        padding: "12px",
-                        borderRadius: "6px",
-                        border: "1px solid #cbd5e1",
-                        fontSize: "1rem",
+                      id: "feature-1-title",
+                      tagName: "h3",
+                      components: [
+                        {
+                          id: "feature-1-title-typography",
+                          type: "typography",
+                          config: {
+                            fontSize: "1.5rem",
+                            fontWeight: 600,
+                            color: "#1a1a1a",
+                            marginBottom: "1rem",
+                          },
+                        },
+                      ],
+                      children: [],
+                      content: "Component-Based",
+                    },
+                    {
+                      id: "feature-1-desc",
+                      tagName: "p",
+                      components: [
+                        {
+                          id: "feature-1-desc-typography",
+                          type: "typography",
+                          config: {
+                            color: "#666",
+                            lineHeight: "1.6",
+                          },
+                        },
+                      ],
+                      children: [],
+                      content:
+                        "Build complex UIs with simple, reusable components.",
+                    },
+                  ],
+                },
+                {
+                  id: "feature-2",
+                  tagName: "div",
+                  components: [
+                    {
+                      id: "feature-2-borderRadius",
+                      type: "borderRadius",
+                      config: {
+                        borderRadius: "15px",
                       },
                     },
                     {
-                      id: "contact-input-email",
-                      type: "element",
-                      tagName: "input",
-                      props: { type: "email", placeholder: "Your Email" },
-                      style: {
-                        padding: "12px",
-                        borderRadius: "6px",
-                        border: "1px solid #cbd5e1",
-                        fontSize: "1rem",
+                      id: "feature-2-typography",
+                      type: "typography",
+                      config: {
+                        textAlign: "center",
                       },
                     },
                     {
-                      id: "contact-input-message",
-                      type: "element",
-                      tagName: "textarea",
-                      props: { placeholder: "Your Message", rows: 4 },
-                      style: {
-                        padding: "12px",
-                        borderRadius: "6px",
-                        border: "1px solid #cbd5e1",
-                        fontSize: "1rem",
-                        resize: "vertical",
+                      id: "feature-2-padding",
+                      type: "padding",
+                      config: {
+                        padding: "2rem",
                       },
                     },
                     {
-                      id: "contact-submit-btn",
-                      type: "element",
-                      tagName: "button",
-                      props: { children: "Send Message" },
-                      style: {
-                        backgroundColor: "#2563eb",
-                        color: "#fff",
-                        fontWeight: 600,
-                        padding: "12px 0",
-                        borderRadius: "8px",
-                        fontSize: "1rem",
-                        border: "none",
-                        cursor: "pointer",
-                        marginTop: "8px",
+                      id: "feature-2-material",
+                      type: "material",
+                      config: {
+                        backgroundColor: "white",
                       },
+                    },
+                    {
+                      id: "feature-2-boxShadow",
+                      type: "boxShadow",
+                      config: {
+                        boxShadow: "0 10px 30px rgba(0, 0, 0, 0.1)",
+                      },
+                    },
+                  ],
+                  children: [
+                    {
+                      id: "feature-2-title",
+                      tagName: "h3",
+                      components: [
+                        {
+                          id: "feature-2-title-typography",
+                          type: "typography",
+                          config: {
+                            fontSize: "1.5rem",
+                            fontWeight: 600,
+                            color: "#1a1a1a",
+                            marginBottom: "1rem",
+                          },
+                        },
+                      ],
+                      children: [],
+                      content: "TypeScript First",
+                    },
+                    {
+                      id: "feature-2-desc",
+                      tagName: "p",
+                      components: [
+                        {
+                          id: "feature-2-desc-typography",
+                          type: "typography",
+                          config: {
+                            color: "#666",
+                            lineHeight: "1.6",
+                          },
+                        },
+                      ],
+                      children: [],
+                      content:
+                        "Full TypeScript support with excellent developer experience.",
+                    },
+                  ],
+                },
+                {
+                  id: "feature-3",
+                  tagName: "div",
+                  components: [
+                    {
+                      id: "feature-3-borderRadius",
+                      type: "borderRadius",
+                      config: {
+                        borderRadius: "15px",
+                      },
+                    },
+                    {
+                      id: "feature-3-typography",
+                      type: "typography",
+                      config: {
+                        textAlign: "center",
+                      },
+                    },
+                    {
+                      id: "feature-3-padding",
+                      type: "padding",
+                      config: {
+                        padding: "2rem",
+                      },
+                    },
+                    {
+                      id: "feature-3-material",
+                      type: "material",
+                      config: {
+                        backgroundColor: "white",
+                      },
+                    },
+                    {
+                      id: "feature-3-boxShadow",
+                      type: "boxShadow",
+                      config: {
+                        boxShadow: "0 10px 30px rgba(0, 0, 0, 0.1)",
+                      },
+                    },
+                  ],
+                  children: [
+                    {
+                      id: "feature-3-title",
+                      tagName: "h3",
+                      components: [
+                        {
+                          id: "feature-3-title-typography",
+                          type: "typography",
+                          config: {
+                            fontSize: "1.5rem",
+                            fontWeight: 600,
+                            color: "#1a1a1a",
+                            marginBottom: "1rem",
+                          },
+                        },
+                      ],
+                      children: [],
+                      content: "High Performance",
+                    },
+                    {
+                      id: "feature-3-desc",
+                      tagName: "p",
+                      components: [
+                        {
+                          id: "feature-3-desc-typography",
+                          type: "typography",
+                          config: {
+                            color: "#666",
+                            lineHeight: "1.6",
+                          },
+                        },
+                      ],
+                      children: [],
+                      content:
+                        "Optimized rendering with minimal re-renders for speed.",
                     },
                   ],
                 },
@@ -556,28 +569,86 @@ const sampleManifest: CanvasManifest = {
             },
           ],
         },
+
         // Footer
         {
           id: "footer",
-          type: "element",
           tagName: "footer",
-          style: {
-            width: "100%",
-            backgroundColor: "#1e293b",
-            color: "#fff",
-            padding: "32px 0 24px 0",
-            textAlign: "center",
-            marginTop: "40px",
-          },
+          components: [
+            {
+              id: "footer-typography",
+              type: "typography",
+              config: {
+                textAlign: "center",
+              },
+            },
+            {
+              id: "footer-padding",
+              type: "padding",
+              config: {
+                padding: "3rem 2rem",
+              },
+            },
+            {
+              id: "footer-material",
+              type: "material",
+              config: {
+                backgroundColor: "#1a1a1a",
+                color: "white",
+              },
+            },
+          ],
           children: [
             {
-              id: "footer-text",
-              type: "element",
-              tagName: "span",
-              props: {
-                children: "© 2024 WebEngineCanvas. All rights reserved.",
-              },
-              style: { fontSize: "1rem", color: "#cbd5e1" },
+              id: "footer-content",
+              tagName: "div",
+              components: [
+                {
+                  id: "footer-content-mesh",
+                  type: "mesh",
+                  config: {
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    gap: "1rem",
+                  },
+                },
+              ],
+              children: [
+                {
+                  id: "footer-logo",
+                  tagName: "div",
+                  components: [
+                    {
+                      id: "footer-logo-typography",
+                      type: "typography",
+                      config: {
+                        fontSize: "2rem",
+                        fontWeight: 700,
+                        color: "white",
+                      },
+                    },
+                  ],
+                  children: [],
+                  content: "WebEngine",
+                },
+                {
+                  id: "footer-text",
+                  tagName: "p",
+                  components: [
+                    {
+                      id: "footer-text-typography",
+                      type: "typography",
+                      config: {
+                        color: "rgba(255, 255, 255, 0.8)",
+                      },
+                    },
+                  ],
+                  children: [],
+                  content:
+                    "© 2024 WebEngine. Building the future of web development.",
+                },
+              ],
             },
           ],
         },
@@ -586,120 +657,33 @@ const sampleManifest: CanvasManifest = {
   },
 }
 
-function DevApp() {
-  const [context, setContext] = useState<any>(null)
-  const [manifest, setManifest] = useState<CanvasManifest>(sampleManifest)
-  const webObjects = useWebObjects(context)
-
-  const handleCanvasReady = useCallback((canvasContext: any) => {
-    setContext(canvasContext)
-    console.log("Canvas ready:", canvasContext)
-  }, [])
-
-  const handleAddText = useCallback(() => {
-    if (!webObjects) return
-
-    const newText = webObjects.createHTMLElement(
-      "p",
-      {
-        children: `New text element ${Date.now()}`,
-      },
-      {
-        backgroundColor: "#e9ecef",
-        padding: "10px",
-        borderRadius: "4px",
-        marginTop: "10px",
-      }
-    )
-    webObjects.addWebObject("content-container", newText)
-  }, [webObjects])
-
-  const handleAddContainer = useCallback(() => {
-    if (!webObjects) return
-
-    const newContainer = webObjects.createContainer(
-      {
-        "data-type": "dynamic-container",
-      },
-      {
-        backgroundColor: "#fff3cd",
-        border: "1px solid #ffeaa7",
-        borderRadius: "8px",
-        padding: "15px",
-        marginTop: "10px",
-      }
-    )
-
-    // Add a child element to the container
-    const childText = webObjects.createHTMLElement(
-      "span",
-      {
-        children: "Dynamic container content",
-      },
-      {
-        color: "#856404",
-      }
-    )
-
-    newContainer.children = [childText]
-    webObjects.addWebObject("content-container", newContainer)
-  }, [webObjects])
-
+function App() {
   const handleWebObjectReady = useCallback(
-    (element: HTMLElement, webObject: WebObject) => {
+    (element: HTMLElement, webObject: any) => {
       console.log("WebObject ready:", webObject.id, element)
-
-      // Add click handlers for buttons only once
-      if (webObject.id === "add-text-btn") {
-        // Remove existing listener to prevent duplicates
-        element.removeEventListener("click", handleAddText)
-        element.addEventListener("click", handleAddText)
-      }
-
-      if (webObject.id === "add-container-btn") {
-        // Remove existing listener to prevent duplicates
-        element.removeEventListener("click", handleAddContainer)
-        element.addEventListener("click", handleAddContainer)
-      }
     },
-    [handleAddText, handleAddContainer]
+    []
   )
 
   const handleWebObjectUpdate = useCallback(
-    (element: HTMLElement, webObject: WebObject) => {
-      console.log("WebObject updated:", webObject.id, webObject)
+    (element: HTMLElement, webObject: any) => {
+      console.log("WebObject updated:", webObject.id, element)
     },
     []
   )
 
   return (
-    <div style={{ width: "100%", height: "100vh", margin: 0, padding: 0 }}>
-      <WebEngineCanvas
-        manifest={manifest}
-        style={{ width: "100%", height: "100vh" }}
-        onCanvasReady={handleCanvasReady}
-        onWebObjectReady={handleWebObjectReady}
-        onWebObjectUpdate={handleWebObjectUpdate}
-      />
-      <div
-        style={{
-          position: "fixed",
-          bottom: 0,
-          right: 0,
-          background: "rgba(255,255,255,0.9)",
-          padding: "8px 16px",
-          fontSize: 12,
-          zIndex: 1000,
-          borderTopLeftRadius: 8,
-          boxShadow: "0 0 8px rgba(0,0,0,0.05)",
-        }}
-      >
-        <b>Debug Info:</b> Context: {context ? "Yes" : "No"} | WebObjects:{" "}
-        {context?.webObjectTree?.nodes?.size || 0}
-      </div>
-    </div>
+    <WebEngineCanvas
+      manifest={sampleManifest}
+      onWebObjectReady={handleWebObjectReady}
+      onWebObjectUpdate={handleWebObjectUpdate}
+      style={{ height: "100vh", width: "100vw" }}
+    />
   )
 }
 
-const root = createRoot(document.getElementById("root")!)
-root.render(<DevApp />)
+ReactDOM.createRoot(document.getElementById("root")!).render(
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>
+)
