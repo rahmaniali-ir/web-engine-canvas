@@ -41,14 +41,7 @@ const WebEngineCanvas: React.FC<WebEngineCanvasProps> = ({
       const assetService = new AssetService()
 
       // Initialize with assets from manifest
-      let assets: any[] = []
-      if (manifest.assets.assets instanceof Map) {
-        assets = Array.from(manifest.assets.assets.values())
-      } else {
-        // Handle plain object storage
-        assets = Object.values(manifest.assets.assets)
-      }
-
+      const assets = Array.from(manifest.assets.values())
       assetService.initializeFromManifest(assets)
       setAssetService(assetService)
       console.log(
@@ -79,24 +72,13 @@ const WebEngineCanvas: React.FC<WebEngineCanvasProps> = ({
             state.currentScene.root
           )
 
-          // If we have a current scene, start transition
-          if (treeService) {
-            setIsTransitioning(true)
-            setTreeService(newTreeService)
-            setRouterState(state)
-            setIsTransitioning(false)
+          // Set the new tree service and router state
+          setTreeService(newTreeService)
+          setRouterState(state)
+          setIsTransitioning(false)
 
-            if (onRouteChange) {
-              onRouteChange(state)
-            }
-          } else {
-            // Initial load, no transition needed
-            setTreeService(newTreeService)
-            setRouterState(state)
-
-            if (onRouteChange) {
-              onRouteChange(state)
-            }
+          if (onRouteChange) {
+            onRouteChange(state)
           }
         } else {
           // No scene found
@@ -122,7 +104,7 @@ const WebEngineCanvas: React.FC<WebEngineCanvasProps> = ({
 
       return unsubscribe
     }
-  }, [manifest, onRouteChange, treeService])
+  }, [manifest, onRouteChange])
 
   // Memoized context methods to prevent recreation
   const updateWebObject = useCallback(

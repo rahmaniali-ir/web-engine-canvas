@@ -227,16 +227,6 @@ export interface AssetReference {
 export type AssetValue<T = any> = T | AssetReference
 
 /**
- * Asset registry - manages all assets in the manifest
- */
-export interface AssetRegistry {
-  assets: Map<string, Asset>
-  paths: Map<string, string[]> // path -> asset IDs
-  types: Map<AssetType, string[]> // type -> asset IDs
-  tags: Map<string, string[]> // tag -> asset IDs
-}
-
-/**
  * Asset manifest - for importing/exporting asset collections
  */
 export interface AssetManifest {
@@ -268,7 +258,6 @@ export interface AssetSearchOptions {
 export interface AssetCreationOptions {
   id?: string
   path?: string
-  description?: string
   tags?: string[]
   overwrite?: boolean
 }

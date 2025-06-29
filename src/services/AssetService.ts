@@ -1,25 +1,15 @@
 import {
   Asset,
   AssetType,
-  AssetRegistry,
   AssetReference,
   AssetValue,
   AssetSearchOptions,
   AssetCreationOptions,
-  AssetManifest,
-  PrefabAsset,
+  PrefabParameter,
   ResourceAsset,
+  PrefabAsset,
   ComponentAsset,
   StylePaletteAsset,
-  AnimationAsset,
-  JsonAsset,
-  ScriptAsset,
-  ShaderAsset,
-  AudioAsset,
-  VideoAsset,
-  FontAsset,
-  IconAsset,
-  PrefabParameter,
 } from "../types/Asset"
 import { WebObject } from "../types/WebObject"
 
@@ -28,26 +18,17 @@ import { WebObject } from "../types/WebObject"
  * Provides creation, retrieval, search, and resolution of assets
  */
 export class AssetService {
-  private registry: AssetRegistry
+  private assets: Map<string, Asset>
 
   constructor() {
-    this.registry = {
-      assets: new Map(),
-      paths: new Map(),
-      types: new Map(),
-      tags: new Map(),
-    }
+    this.assets = new Map()
   }
 
   /**
    * Initialize asset registry from manifest
    */
   initializeFromManifest(assets: Asset[]): void {
-    this.registry.assets.clear()
-    this.registry.paths.clear()
-    this.registry.types.clear()
-    this.registry.tags.clear()
-
+    this.assets.clear()
     assets.forEach(asset => this.addAsset(asset))
   }
 
@@ -55,90 +36,21 @@ export class AssetService {
    * Add an asset to the registry
    */
   addAsset(asset: Asset): void {
-    // Add to main registry
-    this.registry.assets.set(asset.id, asset)
-
-    // Add to path index
-    if (!this.registry.paths.has(asset.path)) {
-      this.registry.paths.set(asset.path, [])
-    }
-    this.registry.paths.get(asset.path)!.push(asset.id)
-
-    // Add to type index
-    if (!this.registry.types.has(asset.type)) {
-      this.registry.types.set(asset.type, [])
-    }
-    this.registry.types.get(asset.type)!.push(asset.id)
-
-    // Add to tag index
-    if (asset.tags) {
-      asset.tags.forEach(tag => {
-        if (!this.registry.tags.has(tag)) {
-          this.registry.tags.set(tag, [])
-        }
-        this.registry.tags.get(tag)!.push(asset.id)
-      })
-    }
+    this.assets.set(asset.id, asset)
   }
 
   /**
    * Remove an asset from the registry
    */
   removeAsset(assetId: string): boolean {
-    const asset = this.registry.assets.get(assetId)
-    if (!asset) return false
-
-    // Remove from main registry
-    this.registry.assets.delete(assetId)
-
-    // Remove from path index
-    const pathAssets = this.registry.paths.get(asset.path)
-    if (pathAssets) {
-      const index = pathAssets.indexOf(assetId)
-      if (index > -1) {
-        pathAssets.splice(index, 1)
-        if (pathAssets.length === 0) {
-          this.registry.paths.delete(asset.path)
-        }
-      }
-    }
-
-    // Remove from type index
-    const typeAssets = this.registry.types.get(asset.type)
-    if (typeAssets) {
-      const index = typeAssets.indexOf(assetId)
-      if (index > -1) {
-        typeAssets.splice(index, 1)
-        if (typeAssets.length === 0) {
-          this.registry.types.delete(asset.type)
-        }
-      }
-    }
-
-    // Remove from tag index
-    if (asset.tags) {
-      asset.tags.forEach(tag => {
-        const tagAssets = this.registry.tags.get(tag)
-        if (tagAssets) {
-          const index = tagAssets.indexOf(assetId)
-          if (index > -1) {
-            tagAssets.splice(index, 1)
-            if (tagAssets.length === 0) {
-              this.registry.tags.delete(tag)
-            }
-          }
-        }
-      })
-    }
-
-    return true
+    return this.assets.delete(assetId)
   }
 
   /**
    * Get an asset by ID
    */
   getAsset(assetId: string): Asset | undefined {
-    return this.registry.assets.get(assetId)
+    return this.assets.get(assetId)
   }
 
   /**
@@ -148,7 +60,7 @@ export class AssetService {
     assetId: string,
     type: AssetType
   ): T | undefined {
-    const asset = this.registry.assets.get(assetId)
+    const asset = this.assets.get(assetId)
     return asset && asset.type === type ? (asset as T) : undefined
   }
 
@@ -156,37 +68,32 @@ export class AssetService {
    * Get all assets
    */
   getAllAssets(): Asset[] {
-    return Array.from(this.registry.assets.values())
+    return Array.from(this.assets.values())
   }
 
   /**
    * Get assets by type
    */
   getAssetsByType(type: AssetType): Asset[] {
-    const assetIds = this.registry.types.get(type) || []
-    return assetIds
-      .map(id => this.registry.assets.get(id))
-      .filter(Boolean) as Asset[]
+    return Array.from(this.assets.values()).filter(asset => asset.type === type)
   }
 
   /**
    * Get assets by path
    */
   getAssetsByPath(path: string): Asset[] {
-    const assetIds = this.registry.paths.get(path) || []
-    return assetIds
-      .map(id => this.registry.assets.get(id))
-      .filter(Boolean) as Asset[]
+    return Array.from(this.assets.values()).filter(asset =>
+      asset.path.startsWith(path)
+    )
   }
 
   /**
    * Get assets by tag
    */
   getAssetsByTag(tag: string): Asset[] {
-    const assetIds = this.registry.tags.get(tag) || []
-    return assetIds
-      .map(id => this.registry.assets.get(id))
-      .filter(Boolean) as Asset[]
+    return Array.from(this.assets.values()).filter(asset =>
+      asset.tags?.includes(tag)
+    )
   }
 
   /**
@@ -223,17 +130,11 @@ export class AssetService {
       results = results.filter(asset => asset.path.startsWith(options.path!))
     }
 
-    // Filter by author
-    if (options.author) {
-      results = results.filter(
-        asset => (asset as any).author === options.author
-      )
-    }
-
-    // Apply pagination
+    // Apply limit and offset
     if (options.offset) {
       results = results.slice(options.offset)
     }
+
     if (options.limit) {
       results = results.slice(0, options.limit)
     }
@@ -242,34 +143,18 @@ export class AssetService {
   }
 
   /**
-   * Resolve an asset to its final value
+   * Resolve an asset to its actual value
    */
   resolveAsset<T = any>(asset: Asset): T | null {
     switch (asset.type) {
       case "prefab":
-        return this.resolvePrefabAsset(asset) as T
+        return this.resolvePrefabAsset(asset as PrefabAsset) as T
       case "resource":
-        return this.resolveResourceAsset(asset) as T
+        return this.resolveResourceAsset(asset as ResourceAsset) as T
       case "component":
-        return this.resolveComponentAsset(asset) as T
+        return this.resolveComponentAsset(asset as ComponentAsset) as T
       case "stylePalette":
-        return this.resolveStylePaletteAsset(asset) as T
-      case "animation":
-        return this.resolveAnimationAsset(asset) as T
-      case "json":
-        return this.resolveJsonAsset(asset) as T
-      case "script":
-        return this.resolveScriptAsset(asset) as T
-      case "shader":
-        return this.resolveShaderAsset(asset) as T
-      case "audio":
-        return this.resolveAudioAsset(asset) as T
-      case "video":
-        return this.resolveVideoAsset(asset) as T
-      case "font":
-        return this.resolveFontAsset(asset) as T
-      case "icon":
-        return this.resolveIconAsset(asset) as T
+        return this.resolveStylePaletteAsset(asset as StylePaletteAsset) as T
       default:
         console.warn(`Unknown asset type: ${(asset as any).type}`)
         return null
@@ -277,84 +162,61 @@ export class AssetService {
   }
 
   /**
-   * Resolve an asset reference to its final value
+   * Resolve an asset reference
    */
   resolveAssetReference<T = any>(reference: AssetReference): T | null {
     const asset = this.getAsset(reference.assetId)
-    if (!asset || asset.type !== reference.assetType) {
-      return null
-    }
+    if (!asset) return null
 
-    // Handle different asset types
     switch (asset.type) {
       case "prefab":
-        return this.resolvePrefabAsset(
-          asset as PrefabAsset,
-          reference.parameters
-        ) as T
+        return this.resolvePrefabAsset(asset as PrefabAsset) as T
       case "resource":
         return this.resolveResourceAsset(asset as ResourceAsset) as T
       case "component":
         return this.resolveComponentAsset(asset as ComponentAsset) as T
       case "stylePalette":
         return this.resolveStylePaletteAsset(asset as StylePaletteAsset) as T
-      case "animation":
-        return this.resolveAnimationAsset(asset as AnimationAsset) as T
-      case "json":
-        return this.resolveJsonAsset(asset as JsonAsset) as T
-      case "script":
-        return this.resolveScriptAsset(asset as ScriptAsset) as T
-      case "shader":
-        return this.resolveShaderAsset(asset as ShaderAsset) as T
-      case "audio":
-        return this.resolveAudioAsset(asset as AudioAsset) as T
-      case "video":
-        return this.resolveVideoAsset(asset as VideoAsset) as T
-      case "font":
-        return this.resolveFontAsset(asset as FontAsset) as T
-      case "icon":
-        return this.resolveIconAsset(asset as IconAsset) as T
       default:
         return null
     }
   }
 
   /**
-   * Resolve an asset value (direct value or asset reference)
+   * Resolve an asset value (can be direct value or asset reference)
    */
   resolveAssetValue<T = any>(value: AssetValue<T>): T | null {
+    // Handle asset references
     if (this.isAssetReference(value)) {
       return this.resolveAssetReference(value)
     }
 
     // Handle simple string references (treat as asset ID)
-    if (typeof value === "string" && this.registry.assets.has(value)) {
-      const asset = this.registry.assets.get(value)
+    if (typeof value === "string" && this.assets.has(value)) {
+      const asset = this.assets.get(value)
       if (asset) {
         const resolved = this.resolveAsset(asset)
 
-        // For style palette assets, extract the actual value
+        // Special handling for style palette assets (colors, gradients, etc.)
         if (
           asset.type === "stylePalette" &&
-          resolved &&
-          typeof resolved === "object"
+          typeof resolved === "object" &&
+          resolved !== null
         ) {
-          // If the resolved value is an object with the same key as the asset ID, extract it
-          if (resolved[asset.id]) {
-            return resolved[asset.id] as T
+          // If the asset ID matches a key in the values, return that specific value
+          if (value in resolved) {
+            return resolved[value] as T
           }
-          // Otherwise return the first value in the palette
-          const firstValue = Object.values(resolved)[0]
-          if (firstValue) {
-            return firstValue as T
-          }
+          // Otherwise return the entire values object
+          return resolved as T
         }
 
         return resolved as T
       }
     }
 
-    return value
+    // Return the value as-is if it's not an asset reference
+    return value as T
   }
 
   /**
@@ -362,10 +224,10 @@ export class AssetService {
    */
   isAssetReference(value: any): value is AssetReference {
     return (
-      value &&
       typeof value === "object" &&
-      "assetId" in value &&
-      "assetType" in value
+      value !== null &&
+      typeof value.assetId === "string" &&
+      typeof value.assetType === "string"
     )
   }
 
@@ -393,7 +255,6 @@ export class AssetService {
       type: "resource",
       resourceType,
       path: creationOptions.path || "resources",
-      description: creationOptions.description,
       tags: creationOptions.tags || [],
       createdAt: new Date(),
       updatedAt: new Date(),
@@ -424,7 +285,6 @@ export class AssetService {
       type: "prefab",
       template,
       path: creationOptions.path || "prefabs",
-      description: creationOptions.description,
       tags: creationOptions.tags || [],
       createdAt: new Date(),
       updatedAt: new Date(),
@@ -458,7 +318,6 @@ export class AssetService {
       componentType,
       config,
       path: creationOptions.path || "components",
-      description: creationOptions.description,
       tags: creationOptions.tags || [],
       createdAt: new Date(),
       updatedAt: new Date(),
@@ -490,7 +349,6 @@ export class AssetService {
       paletteType,
       values,
       path: creationOptions.path || "styles",
-      description: creationOptions.description,
       tags: creationOptions.tags || [],
       createdAt: new Date(),
       updatedAt: new Date(),
@@ -504,21 +362,13 @@ export class AssetService {
 
   // Asset resolution methods
 
-  private resolvePrefabAsset(
-    prefab: PrefabAsset,
-    parameters?: Record<string, any>
-  ): WebObject | null {
+  private resolvePrefabAsset(prefab: PrefabAsset): WebObject | null {
     // Deep clone the template
     const instance = JSON.parse(JSON.stringify(prefab.template))
 
     // Apply default values
     if (prefab.defaultValues) {
       this.applyParametersToWebObject(instance, prefab.defaultValues)
-    }
-
-    // Apply provided parameters
-    if (parameters) {
-      this.applyParametersToWebObject(instance, parameters)
     }
 
     return instance
@@ -538,56 +388,6 @@ export class AssetService {
     palette: StylePaletteAsset
   ): Record<string, any> {
     return palette.values
-  }
-
-  private resolveAnimationAsset(
-    animation: AnimationAsset
-  ): Record<string, any> {
-    return {
-      type: animation.animationType,
-      duration: animation.duration,
-      easing: animation.easing,
-      keyframes: animation.keyframes,
-      properties: animation.properties,
-    }
-  }
-
-  private resolveJsonAsset(json: JsonAsset): any {
-    return json.data
-  }
-
-  private resolveScriptAsset(script: ScriptAsset): string {
-    return script.code
-  }
-
-  private resolveShaderAsset(shader: ShaderAsset): Record<string, any> {
-    return {
-      type: shader.shaderType,
-      code: shader.code,
-      uniforms: shader.uniforms,
-    }
-  }
-
-  private resolveAudioAsset(audio: AudioAsset): string {
-    return audio.url
-  }
-
-  private resolveVideoAsset(video: VideoAsset): string {
-    return video.url
-  }
-
-  private resolveFontAsset(font: FontAsset): Record<string, any> {
-    return {
-      family: font.family,
-      url: font.url,
-      weight: font.weight,
-      style: font.style,
-      formats: font.formats,
-    }
-  }
-
-  private resolveIconAsset(icon: IconAsset): string {
-    return icon.content
   }
 
   // Helper methods
@@ -622,38 +422,5 @@ export class AssetService {
     const timestamp = Date.now()
     const random = Math.random().toString(36).substr(2, 9)
     return `${name.toLowerCase().replace(/\s+/g, "-")}-${timestamp}-${random}`
-  }
-
-  /**
-   * Export assets to manifest
-   */
-  exportAssetManifest(): AssetManifest {
-    return {
-      id: "asset-manifest",
-      name: "Asset Manifest",
-      version: "1.0.0",
-      assets: this.getAllAssets(),
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    }
-  }
-
-  /**
-   * Import assets from manifest
-   */
-  importAssetManifest(manifest: AssetManifest): void {
-    manifest.assets.forEach(asset => {
-      // Convert string dates back to Date objects
-      asset.createdAt = new Date(asset.createdAt)
-      asset.updatedAt = new Date(asset.updatedAt)
-      this.addAsset(asset)
-    })
-  }
-
-  /**
-   * Get the asset registry
-   */
-  getRegistry(): AssetRegistry {
-    return this.registry
   }
 }

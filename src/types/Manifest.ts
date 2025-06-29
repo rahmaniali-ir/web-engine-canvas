@@ -1,5 +1,5 @@
 import { WebObject } from "./WebObject"
-import { AssetRegistry } from "./Asset"
+import { Asset } from "./Asset"
 import { Prefab } from "./Prefab"
 
 export interface Scene {
@@ -25,8 +25,9 @@ export interface Manifest {
   routes: Route[]
   scenes: Scene[]
   defaultRoute?: string
-  assets: AssetRegistry // Asset registry for all assets
+  assets: Map<string, Asset> // Simple map of assets by ID
   prefabs?: Prefab[] // Prefab definitions
+  tags?: string[] // Global tags for the manifest
   settings?: {
     width?: number
     height?: number
