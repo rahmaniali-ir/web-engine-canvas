@@ -1,5 +1,6 @@
 // Component types index - exports all component types
 
+export * from "./AnimationComponent"
 export * from "./BorderComponent"
 export * from "./BorderRadiusComponent"
 export * from "./BoxShadowComponent"

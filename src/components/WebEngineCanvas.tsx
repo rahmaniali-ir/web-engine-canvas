@@ -4,6 +4,7 @@ import { WebObjectContext } from "../types/Context"
 import { RouterService, RouterState } from "../services/RouterService"
 import { WebObjectTreeService } from "../services/WebObjectTreeService"
 import { AssetService } from "../services/AssetService"
+import { AnimationService } from "../services/AnimationService"
 import { Manifest } from "../types/Manifest"
 import WebObjectComponent from "./WebObject"
 
@@ -33,6 +34,8 @@ const WebEngineCanvas: React.FC<WebEngineCanvasProps> = ({
     null
   )
   const [assetService, setAssetService] = useState<AssetService | null>(null)
+  const [animationService, setAnimationService] =
+    useState<AnimationService | null>(null)
   const [isTransitioning, setIsTransitioning] = useState(false)
 
   // Initialize the asset service when manifest changes
@@ -42,6 +45,10 @@ const WebEngineCanvas: React.FC<WebEngineCanvasProps> = ({
 
       // Initialize with assets from manifest
       const assets = Array.from(manifest.assets.values())
+      console.log(
+        "WebEngineCanvas: Loading assets:",
+        assets.map(a => ({ id: a.id, type: a.type }))
+      )
       assetService.initializeFromManifest(assets)
       setAssetService(assetService)
       console.log(
@@ -106,6 +113,22 @@ const WebEngineCanvas: React.FC<WebEngineCanvasProps> = ({
     }
   }, [manifest, onRouteChange])
 
+  // Initialize the animation service when asset service changes
+  useEffect(() => {
+    if (assetService) {
+      console.log(
+        "WebEngineCanvas: Initializing AnimationService with AssetService"
+      )
+      const animationService = new AnimationService(assetService)
+      setAnimationService(animationService)
+      console.log("WebEngineCanvas: AnimationService initialized")
+    } else {
+      console.log(
+        "WebEngineCanvas: No AssetService available for AnimationService"
+      )
+    }
+  }, [assetService])
+
   // Memoized context methods to prevent recreation
   const updateWebObject = useCallback(
     (id: string, updates: Partial<WebObject>) => {
@@ -169,12 +192,13 @@ const WebEngineCanvas: React.FC<WebEngineCanvasProps> = ({
   const webObjectContext = useMemo(() => {
     if (!treeService || !canvasRef.current || !routerState) return null
 
-    return {
+    const context = {
       canvas: canvasRef.current,
       manifest,
       webObjectTree: treeService.getTree(),
       routerState,
       assetService,
+      animationService,
       navigate,
       goBack,
       goForward,
@@ -183,11 +207,18 @@ const WebEngineCanvas: React.FC<WebEngineCanvasProps> = ({
       removeWebObject,
       moveWebObject,
     } as WebObjectContext
+
+    console.log(
+      "WebEngineCanvas: Created context with animationService:",
+      !!animationService
+    )
+    return context
   }, [
     treeService,
     manifest,
     routerState,
     assetService,
+    animationService,
     navigate,
     goBack,
     goForward,

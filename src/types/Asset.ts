@@ -113,6 +113,32 @@ export interface AnimationAsset extends BaseAsset {
   easing?: string
   keyframes?: Record<string, any>
   properties?: string[]
+  // Enhanced keyframe support
+  keyframeAnimations?: {
+    [property: string]: {
+      from: any
+      to: any
+      duration?: number
+      easing?: string
+      delay?: number
+    }
+  }
+  // State-based animations
+  stateAnimations?: {
+    [state: string]: {
+      [property: string]: {
+        from: any
+        to: any
+        duration?: number
+        easing?: string
+        delay?: number
+      }
+    }
+  }
+  // Loop settings
+  loop?: boolean
+  loopCount?: number // -1 for infinite
+  direction?: "normal" | "reverse" | "alternate" | "alternate-reverse"
 }
 
 /**

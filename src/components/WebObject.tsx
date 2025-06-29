@@ -53,11 +53,24 @@ const WebObjectComponent: React.FC<WebObjectProps> = React.memo(
     const instantiatedWebObject = useMemo(() => {
       if (!prefabId || !context?.manifest) return webObject
 
+      console.log(
+        "WebObject: Instantiating prefab",
+        prefabId,
+        "for",
+        webObject.id
+      )
+
       try {
         // First try to find prefab in the prefabs array
         if (context.manifest.prefabs) {
           const prefab = context.manifest.prefabs.find(p => p.id === prefabId)
           if (prefab) {
+            console.log(
+              "WebObject: Found prefab",
+              prefabId,
+              "with components:",
+              prefab.template.components?.length || 0
+            )
             // Deep clone the template
             const instance = JSON.parse(JSON.stringify(prefab.template))
 
@@ -72,12 +85,29 @@ const WebObjectComponent: React.FC<WebObjectProps> = React.memo(
             }
 
             // Merge with original WebObject properties (like id, prefabId, prefabParameters, etc.)
-            return {
+            // AND merge components from both the prefab template and the original WebObject
+            const result = {
               ...instance,
               id: webObject.id,
               prefabId: webObject.prefabId,
               prefabParameters: webObject.prefabParameters,
+              // Merge components: prefab components first, then scene components
+              components: [
+                ...(instance.components || []),
+                ...(webObject.components || []),
+              ],
             }
+            console.log(
+              "WebObject: Instantiated prefab result:",
+              result.id,
+              "with components:",
+              result.components?.length || 0,
+              "prefab components:",
+              instance.components?.length || 0,
+              "scene components:",
+              webObject.components?.length || 0
+            )
+            return result
           }
         }
 
@@ -111,11 +141,17 @@ const WebObjectComponent: React.FC<WebObjectProps> = React.memo(
         }
 
         // Merge with original WebObject properties (like id, prefabId, prefabParameters, etc.)
+        // AND merge components from both the prefab template and the original WebObject
         return {
           ...instance,
           id: webObject.id,
           prefabId: webObject.prefabId,
           prefabParameters: webObject.prefabParameters,
+          // Merge components: prefab components first, then scene components
+          components: [
+            ...(instance.components || []),
+            ...(webObject.components || []),
+          ],
         }
       } catch (error) {
         console.error(`Error instantiating prefab ${prefabId}:`, error)
@@ -165,7 +201,124 @@ const WebObjectComponent: React.FC<WebObjectProps> = React.memo(
     // Apply components when they change
     useEffect(() => {
       applyComponents()
-    }, [applyComponents])
+
+      // Handle animations
+      if (elementRef.current && context?.animationService) {
+        console.log(
+          "WebObject: Checking for animations in",
+          instantiatedWebObject.id,
+          "with components:",
+          instantiatedWebObject.components?.length || 0
+        )
+
+        if (instantiatedWebObject.components) {
+          instantiatedWebObject.components.forEach(
+            (component: any, index: number) => {
+              console.log(
+                "WebObject: Checking component",
+                index,
+                "type:",
+                component.type,
+                "config:",
+                component.config
+              )
+
+              if (component.type === "animation") {
+                console.log(
+                  "WebObject: Found animation component:",
+                  component.config
+                )
+
+                if (component.config.autoPlay) {
+                  const animationId = component.config.animationId
+                  console.log(
+                    "WebObject: Animation ID:",
+                    animationId,
+                    "type:",
+                    typeof animationId
+                  )
+
+                  if (
+                    typeof animationId === "string" &&
+                    context.animationService
+                  ) {
+                    // Get duration from prefabParameters if available, otherwise use default
+                    const duration =
+                      instantiatedWebObject.prefabParameters?.duration ||
+                      component.config.duration ||
+                      4000
+
+                    console.log(
+                      "WebObject: Starting animation",
+                      animationId,
+                      "for",
+                      instantiatedWebObject.id,
+                      "with duration:",
+                      duration,
+                      "element:",
+                      elementRef.current
+                    )
+
+                    try {
+                      context.animationService.playAnimation(
+                        elementRef.current!,
+                        animationId,
+                        {
+                          loop: component.config.loop,
+                          loopCount: component.config.loopCount,
+                          direction: component.config.direction,
+                          duration: duration,
+                        }
+                      )
+                      console.log("WebObject: Animation started successfully")
+                    } catch (error) {
+                      console.error(
+                        "WebObject: Error starting animation:",
+                        error
+                      )
+                    }
+                  } else {
+                    console.warn(
+                      "WebObject: Invalid animation ID or no animation service:",
+                      animationId,
+                      "service:",
+                      !!context.animationService
+                    )
+                  }
+                } else {
+                  console.log("WebObject: Animation not set to autoPlay")
+                }
+              }
+            }
+          )
+        } else {
+          console.log(
+            "WebObject: No components found for",
+            instantiatedWebObject.id
+          )
+        }
+      } else {
+        console.log(
+          "WebObject: No element ref or animation service for",
+          instantiatedWebObject.id,
+          "element:",
+          !!elementRef.current,
+          "service:",
+          !!context?.animationService
+        )
+      }
+
+      // Cleanup animations on unmount
+      return () => {
+        if (elementRef.current && context?.animationService) {
+          context.animationService.cleanupElement(elementRef.current)
+        }
+      }
+    }, [
+      applyComponents,
+      instantiatedWebObject.components,
+      context?.animationService,
+    ])
 
     // Notify when element is ready
     useEffect(() => {

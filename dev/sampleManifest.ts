@@ -230,6 +230,56 @@ export const sampleManifest: Manifest = {
         updatedAt: new Date(),
       },
     ],
+    [
+      "star-svg",
+      {
+        id: "star-svg",
+        name: "Simple Star SVG",
+        type: "resource",
+        resourceType: "image",
+        path: "images/icons",
+        url: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><polygon points='16,2 20,12 31,12 22,19 25,30 16,23 7,30 10,19 1,12 12,12'/></svg>",
+        mimeType: "image/svg+xml",
+        description: "Simple gold star SVG",
+        tags: ["icon", "star", "svg"],
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+    ],
+    // Star Animation Assets
+    [
+      "star-twinkle",
+      {
+        id: "star-twinkle",
+        name: "Star Twinkle Animation",
+        type: "animation" as const,
+        path: "animations/stars",
+        description: "Twinkling animation for stars",
+        tags: ["animation", "star", "twinkle", "effect"],
+        animationType: "keyframe" as const,
+        duration: 4000,
+        easing: "ease-in-out",
+        loop: true,
+        loopCount: -1,
+        direction: "alternate" as const,
+        keyframeAnimations: {
+          opacity: {
+            from: 0.0,
+            to: 0.7,
+            duration: 4000,
+            easing: "ease-in-out",
+          },
+          scale: {
+            from: 0.8,
+            to: 1.2,
+            duration: 4000,
+            easing: "ease-in-out",
+          },
+        },
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      } as any,
+    ],
   ]),
 
   prefabs: [
@@ -401,6 +451,150 @@ export const sampleManifest: Manifest = {
       createdAt: new Date(),
       updatedAt: new Date(),
     },
+    {
+      id: "star-small",
+      name: "Small Star",
+      type: "prefab" as const,
+      path: "prefabs/stars",
+      description: "Small twinkling star",
+      tags: ["prefab", "star", "small", "twinkle"],
+      template: {
+        id: "star-small",
+        type: "div",
+        content: "★",
+        components: [
+          {
+            id: "star-small-mesh",
+            type: "mesh",
+            config: {
+              position: "absolute",
+              width: "8px",
+              height: "8px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            },
+          },
+          {
+            id: "star-small-material",
+            type: "material",
+            config: {
+              color: "white",
+              fontSize: "8px",
+            },
+          },
+          {
+            id: "star-small-animation",
+            type: "animation",
+            config: {
+              animationId: "star-twinkle",
+              loop: true,
+              loopCount: -1,
+              autoPlay: true,
+              delay: 0,
+            },
+          },
+        ],
+      },
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    } as any,
+    {
+      id: "star-medium",
+      name: "Medium Star",
+      type: "prefab" as const,
+      path: "prefabs/stars",
+      description: "Medium twinkling star",
+      tags: ["prefab", "star", "medium", "twinkle"],
+      template: {
+        id: "star-medium",
+        type: "div",
+        content: "★",
+        components: [
+          {
+            id: "star-medium-mesh",
+            type: "mesh",
+            config: {
+              position: "absolute",
+              width: "12px",
+              height: "12px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            },
+          },
+          {
+            id: "star-medium-material",
+            type: "material",
+            config: {
+              color: "white",
+              fontSize: "12px",
+            },
+          },
+          {
+            id: "star-medium-animation",
+            type: "animation",
+            config: {
+              animationId: "star-twinkle",
+              loop: true,
+              loopCount: -1,
+              autoPlay: true,
+              delay: 0,
+            },
+          },
+        ],
+      },
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    } as any,
+    {
+      id: "star-large",
+      name: "Large Star",
+      type: "prefab" as const,
+      path: "prefabs/stars",
+      description: "Large twinkling star",
+      tags: ["prefab", "star", "large", "twinkle"],
+      template: {
+        id: "star-large",
+        type: "div",
+        content: "★",
+        components: [
+          {
+            id: "star-large-mesh",
+            type: "mesh",
+            config: {
+              position: "absolute",
+              width: "16px",
+              height: "16px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            },
+          },
+          {
+            id: "star-large-material",
+            type: "material",
+            config: {
+              color: "white",
+              fontSize: "16px",
+            },
+          },
+          {
+            id: "star-large-animation",
+            type: "animation",
+            config: {
+              animationId: "star-twinkle",
+              loop: true,
+              loopCount: -1,
+              autoPlay: true,
+              delay: 0,
+            },
+          },
+        ],
+      },
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    } as any,
   ],
 
   scenes: [mainScene, aboutScene, contactScene, docsScene, blogScene],
@@ -433,3 +627,5 @@ export const sampleManifest: Manifest = {
     },
   ],
 }
+
+export default sampleManifest

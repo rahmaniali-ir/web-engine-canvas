@@ -10,6 +10,7 @@ import {
   PrefabAsset,
   ComponentAsset,
   StylePaletteAsset,
+  AnimationAsset,
 } from "../types/Asset"
 import { WebObject } from "../types/WebObject"
 
@@ -28,8 +29,26 @@ export class AssetService {
    * Initialize asset registry from manifest
    */
   initializeFromManifest(assets: Asset[]): void {
-    this.assets.clear()
-    assets.forEach(asset => this.addAsset(asset))
+    console.log("AssetService: Initializing with", assets.length, "assets")
+
+    // Log animation assets specifically
+    const animationAssets = assets.filter(asset => asset.type === "animation")
+    console.log(
+      "AssetService: Found",
+      animationAssets.length,
+      "animation assets:",
+      animationAssets.map(a => ({ id: a.id, name: a.name }))
+    )
+
+    assets.forEach(asset => {
+      this.assets.set(asset.id, asset)
+    })
+
+    console.log(
+      "AssetService: Initialized with",
+      this.assets.size,
+      "total assets"
+    )
   }
 
   /**
@@ -61,7 +80,20 @@ export class AssetService {
     type: AssetType
   ): T | undefined {
     const asset = this.assets.get(assetId)
-    return asset && asset.type === type ? (asset as T) : undefined
+    if (!asset) {
+      console.warn(`AssetService: Asset not found: ${assetId}`)
+      return undefined
+    }
+
+    if (asset.type !== type) {
+      console.warn(
+        `AssetService: Asset type mismatch. Expected ${type}, got ${asset.type} for asset: ${assetId}`
+      )
+      return undefined
+    }
+
+    console.log(`AssetService: Found ${type} asset:`, assetId, asset)
+    return asset as T
   }
 
   /**
@@ -155,6 +187,8 @@ export class AssetService {
         return this.resolveComponentAsset(asset as ComponentAsset) as T
       case "stylePalette":
         return this.resolveStylePaletteAsset(asset as StylePaletteAsset) as T
+      case "animation":
+        return this.resolveAnimationAsset(asset as AnimationAsset) as T
       default:
         console.warn(`Unknown asset type: ${(asset as any).type}`)
         return null
@@ -393,6 +427,20 @@ export class AssetService {
     palette: StylePaletteAsset
   ): Record<string, any> {
     return palette.values
+  }
+
+  private resolveAnimationAsset(animation: AnimationAsset): any {
+    return {
+      id: animation.id,
+      type: animation.animationType,
+      duration: animation.duration,
+      easing: animation.easing,
+      keyframeAnimations: animation.keyframeAnimations,
+      stateAnimations: animation.stateAnimations,
+      loop: animation.loop,
+      loopCount: animation.loopCount,
+      direction: animation.direction,
+    }
   }
 
   // Helper methods

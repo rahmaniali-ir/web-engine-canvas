@@ -44,6 +44,7 @@ const mainScene: Scene = {
               alignItems: "center",
               justifyContent: "center",
               gap: "1.5rem",
+              position: "relative",
             },
           },
           {
@@ -158,6 +159,443 @@ const mainScene: Scene = {
                 type: "interaction",
                 config: {
                   cursor: "pointer",
+                },
+              },
+            ],
+          },
+          // Star background effects
+          {
+            id: "star-1",
+            type: "div",
+            prefabId: "star-small",
+            prefabParameters: {
+              duration: 3200,
+            },
+            components: [
+              {
+                id: "star-1-position",
+                type: "mesh",
+                config: {
+                  position: "absolute",
+                  top: "25px",
+                  left: "85px",
+                  zIndex: "10",
+                  width: "8px",
+                  height: "8px",
+                },
+              },
+              {
+                id: "star-1-opacity",
+                type: "material",
+                config: {
+                  opacity: 0.65,
+                },
+              },
+            ],
+          },
+          {
+            id: "star-2",
+            type: "div",
+            prefabId: "star-medium",
+            prefabParameters: {
+              duration: 4800,
+            },
+            components: [
+              {
+                id: "star-2-position",
+                type: "mesh",
+                config: {
+                  position: "absolute",
+                  top: "95px",
+                  left: "280px",
+                  zIndex: "10",
+                  width: "12px",
+                  height: "12px",
+                },
+              },
+              {
+                id: "star-2-opacity",
+                type: "material",
+                config: {
+                  opacity: 0.45,
+                },
+              },
+            ],
+          },
+          {
+            id: "star-3",
+            type: "div",
+            prefabId: "star-large",
+            prefabParameters: {
+              duration: 3600,
+            },
+            components: [
+              {
+                id: "star-3-position",
+                type: "mesh",
+                config: {
+                  position: "absolute",
+                  top: "55px",
+                  left: "520px",
+                  zIndex: "10",
+                  width: "16px",
+                  height: "16px",
+                },
+              },
+              {
+                id: "star-3-opacity",
+                type: "material",
+                config: {
+                  opacity: 0.7,
+                },
+              },
+            ],
+          },
+          {
+            id: "star-4",
+            type: "div",
+            prefabId: "star-small",
+            prefabParameters: {
+              duration: 5400,
+            },
+            components: [
+              {
+                id: "star-4-position",
+                type: "mesh",
+                config: {
+                  position: "absolute",
+                  top: "145px",
+                  left: "195px",
+                  zIndex: "10",
+                  width: "8px",
+                  height: "8px",
+                },
+              },
+              {
+                id: "star-4-opacity",
+                type: "material",
+                config: {
+                  opacity: 0.35,
+                },
+              },
+            ],
+          },
+          {
+            id: "star-5",
+            type: "div",
+            prefabId: "star-medium",
+            prefabParameters: {
+              duration: 2800,
+            },
+            components: [
+              {
+                id: "star-5-position",
+                type: "mesh",
+                config: {
+                  position: "absolute",
+                  top: "75px",
+                  left: "680px",
+                  zIndex: "10",
+                  width: "12px",
+                  height: "12px",
+                },
+              },
+              {
+                id: "star-5-opacity",
+                type: "material",
+                config: {
+                  opacity: 0.55,
+                },
+              },
+            ],
+          },
+          {
+            id: "star-6",
+            type: "div",
+            prefabId: "star-large",
+            prefabParameters: {
+              duration: 4200,
+            },
+            components: [
+              {
+                id: "star-6-position",
+                type: "mesh",
+                config: {
+                  position: "absolute",
+                  top: "165px",
+                  left: "375px",
+                  zIndex: "10",
+                  width: "16px",
+                  height: "16px",
+                },
+              },
+              {
+                id: "star-6-opacity",
+                type: "material",
+                config: {
+                  opacity: 0.4,
+                },
+              },
+            ],
+          },
+          // Additional stars for more populated effect
+          {
+            id: "star-7",
+            type: "div",
+            prefabId: "star-small",
+            prefabParameters: {
+              duration: 3800,
+            },
+            components: [
+              {
+                id: "star-7-position",
+                type: "mesh",
+                config: {
+                  position: "absolute",
+                  top: "15px",
+                  left: "420px",
+                  zIndex: "10",
+                  width: "8px",
+                  height: "8px",
+                },
+              },
+              {
+                id: "star-7-opacity",
+                type: "material",
+                config: {
+                  opacity: 0.25,
+                },
+              },
+            ],
+          },
+          {
+            id: "star-8",
+            type: "div",
+            prefabId: "star-medium",
+            prefabParameters: {
+              duration: 5100,
+            },
+            components: [
+              {
+                id: "star-8-position",
+                type: "mesh",
+                config: {
+                  position: "absolute",
+                  top: "125px",
+                  left: "620px",
+                  zIndex: "10",
+                  width: "12px",
+                  height: "12px",
+                },
+              },
+              {
+                id: "star-8-opacity",
+                type: "material",
+                config: {
+                  opacity: 0.6,
+                },
+              },
+            ],
+          },
+          {
+            id: "star-9",
+            type: "div",
+            prefabId: "star-small",
+            prefabParameters: {
+              duration: 3400,
+            },
+            components: [
+              {
+                id: "star-9-position",
+                type: "mesh",
+                config: {
+                  position: "absolute",
+                  top: "45px",
+                  left: "255px",
+                  zIndex: "10",
+                  width: "8px",
+                  height: "8px",
+                },
+              },
+              {
+                id: "star-9-opacity",
+                type: "material",
+                config: {
+                  opacity: 0.5,
+                },
+              },
+            ],
+          },
+          {
+            id: "star-10",
+            type: "div",
+            prefabId: "star-large",
+            prefabParameters: {
+              duration: 4600,
+            },
+            components: [
+              {
+                id: "star-10-position",
+                type: "mesh",
+                config: {
+                  position: "absolute",
+                  top: "185px",
+                  left: "555px",
+                  zIndex: "10",
+                  width: "16px",
+                  height: "16px",
+                },
+              },
+              {
+                id: "star-10-opacity",
+                type: "material",
+                config: {
+                  opacity: 0.7,
+                },
+              },
+            ],
+          },
+          {
+            id: "star-11",
+            type: "div",
+            prefabId: "star-small",
+            prefabParameters: {
+              duration: 3900,
+            },
+            components: [
+              {
+                id: "star-11-position",
+                type: "mesh",
+                config: {
+                  position: "absolute",
+                  top: "5px",
+                  left: "355px",
+                  zIndex: "10",
+                  width: "8px",
+                  height: "8px",
+                },
+              },
+              {
+                id: "star-11-opacity",
+                type: "material",
+                config: {
+                  opacity: 0.3,
+                },
+              },
+            ],
+          },
+          {
+            id: "star-12",
+            type: "div",
+            prefabId: "star-medium",
+            prefabParameters: {
+              duration: 3700,
+            },
+            components: [
+              {
+                id: "star-12-position",
+                type: "mesh",
+                config: {
+                  position: "absolute",
+                  top: "105px",
+                  left: "155px",
+                  zIndex: "10",
+                  width: "12px",
+                  height: "12px",
+                },
+              },
+              {
+                id: "star-12-opacity",
+                type: "material",
+                config: {
+                  opacity: 0.65,
+                },
+              },
+            ],
+          },
+          {
+            id: "star-13",
+            type: "div",
+            prefabId: "star-small",
+            prefabParameters: {
+              duration: 4300,
+            },
+            components: [
+              {
+                id: "star-13-position",
+                type: "mesh",
+                config: {
+                  position: "absolute",
+                  top: "65px",
+                  left: "725px",
+                  zIndex: "10",
+                  width: "8px",
+                  height: "8px",
+                },
+              },
+              {
+                id: "star-13-opacity",
+                type: "material",
+                config: {
+                  opacity: 0.4,
+                },
+              },
+            ],
+          },
+          {
+            id: "star-14",
+            type: "div",
+            prefabId: "star-large",
+            prefabParameters: {
+              duration: 2900,
+            },
+            components: [
+              {
+                id: "star-14-position",
+                type: "mesh",
+                config: {
+                  position: "absolute",
+                  top: "205px",
+                  left: "295px",
+                  zIndex: "10",
+                  width: "16px",
+                  height: "16px",
+                },
+              },
+              {
+                id: "star-14-opacity",
+                type: "material",
+                config: {
+                  opacity: 0.2,
+                },
+              },
+            ],
+          },
+          {
+            id: "star-15",
+            type: "div",
+            prefabId: "star-small",
+            prefabParameters: {
+              duration: 4700,
+            },
+            components: [
+              {
+                id: "star-15-position",
+                type: "mesh",
+                config: {
+                  position: "absolute",
+                  top: "35px",
+                  left: "575px",
+                  zIndex: "10",
+                  width: "8px",
+                  height: "8px",
+                },
+              },
+              {
+                id: "star-15-opacity",
+                type: "material",
+                config: {
+                  opacity: 0.55,
                 },
               },
             ],

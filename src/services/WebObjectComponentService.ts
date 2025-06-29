@@ -12,6 +12,7 @@ import {
   BoxShadowComponent,
   FilterComponent,
   CssComponent,
+  AnimationComponent,
 } from "../types"
 import { WebObjectComponent } from "../types/WebObjectComponent"
 import { AssetService } from "./AssetService"
@@ -466,6 +467,55 @@ export class WebObjectComponentService {
         }
       })
     })
+
+    // Register animation component handler
+    this.componentRegistry.set("animation", (element, config, assetService) => {
+      const resolvedConfig = this.resolveComponentConfig(config, assetService)
+
+      // Store animation configuration on the element for later use
+      if (resolvedConfig.animationId) {
+        element.setAttribute("data-animation-id", resolvedConfig.animationId)
+      }
+
+      if (resolvedConfig.stateAnimations) {
+        element.setAttribute(
+          "data-state-animations",
+          JSON.stringify(resolvedConfig.stateAnimations)
+        )
+      }
+
+      if (resolvedConfig.loop !== undefined) {
+        element.setAttribute(
+          "data-animation-loop",
+          resolvedConfig.loop.toString()
+        )
+      }
+
+      if (resolvedConfig.loopCount !== undefined) {
+        element.setAttribute(
+          "data-animation-loop-count",
+          resolvedConfig.loopCount.toString()
+        )
+      }
+
+      if (resolvedConfig.direction) {
+        element.setAttribute(
+          "data-animation-direction",
+          resolvedConfig.direction
+        )
+      }
+
+      if (resolvedConfig.autoPlay) {
+        element.setAttribute("data-animation-autoplay", "true")
+      }
+
+      if (resolvedConfig.autoPlayStates) {
+        element.setAttribute(
+          "data-animation-autoplay-states",
+          JSON.stringify(resolvedConfig.autoPlayStates)
+        )
+      }
+    })
   }
 
   /**
@@ -639,6 +689,16 @@ export class WebObjectComponentService {
     return {
       id: `css-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       type: "css",
+      config,
+    }
+  }
+
+  createAnimationComponent(
+    config: AnimationComponent["config"]
+  ): AnimationComponent {
+    return {
+      id: `animation-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      type: "animation",
       config,
     }
   }

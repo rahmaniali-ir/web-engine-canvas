@@ -1,7 +1,7 @@
 import React, { useCallback } from "react"
 import ReactDOM from "react-dom/client"
 import { WebEngineCanvas } from "../src"
-import { sampleManifest } from "./sampleManifest"
+import sampleManifest from "./sampleManifest"
 
 function App() {
   const handleWebObjectReady = useCallback((element, webObject) => {

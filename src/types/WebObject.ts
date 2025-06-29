@@ -10,6 +10,18 @@ export interface BaseWebObject {
   // Prefab support
   prefabId?: string
   prefabParameters?: Record<string, any>
+  // State tracking
+  states?: {
+    hover?: boolean
+    active?: boolean
+    disabled?: boolean
+    focused?: boolean
+    loading?: boolean
+    selected?: boolean
+    [key: string]: boolean | undefined
+  }
+  // State change handlers
+  onStateChange?: (state: string, value: boolean) => void
 }
 
 export interface DivWebObject extends BaseWebObject {
