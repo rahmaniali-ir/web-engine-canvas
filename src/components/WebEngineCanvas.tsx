@@ -1,8 +1,10 @@
-import React, { useRef, useEffect, useState, useCallback, useMemo } from "react"
-import { Manifest, WebObject, WebObjectContext } from "../types"
-import { WebObjectTreeService } from "../services/WebObjectTreeService"
+import React, { useRef, useState, useEffect, useCallback, useMemo } from "react"
+import { WebObject } from "../types/WebObject"
+import { WebObjectContext } from "../types/Context"
 import { RouterService, RouterState } from "../services/RouterService"
+import { WebObjectTreeService } from "../services/WebObjectTreeService"
 import { AssetService } from "../services/AssetService"
+import { Manifest } from "../types/Manifest"
 import WebObjectComponent from "./WebObject"
 
 export interface WebEngineCanvasProps {
@@ -12,7 +14,7 @@ export interface WebEngineCanvasProps {
   onCanvasReady?: (context: WebObjectContext) => void
   onWebObjectReady?: (element: HTMLElement, webObject: WebObject) => void
   onWebObjectUpdate?: (element: HTMLElement, webObject: WebObject) => void
-  onRouteChange?: (routerState: RouterState) => void
+  onRouteChange?: (state: RouterState) => void
 }
 
 const WebEngineCanvas: React.FC<WebEngineCanvasProps> = ({
@@ -26,12 +28,12 @@ const WebEngineCanvas: React.FC<WebEngineCanvasProps> = ({
 }) => {
   const canvasRef = useRef<HTMLDivElement>(null)
   const [routerService, setRouterService] = useState<RouterService | null>(null)
+  const [routerState, setRouterState] = useState<RouterState | null>(null)
   const [treeService, setTreeService] = useState<WebObjectTreeService | null>(
     null
   )
   const [assetService, setAssetService] = useState<AssetService | null>(null)
-  const [routerState, setRouterState] = useState<RouterState | null>(null)
-  const [forceUpdate, setForceUpdate] = useState(0)
+  const [isTransitioning, setIsTransitioning] = useState(false)
 
   // Initialize the asset service when manifest changes
   useEffect(() => {
@@ -68,42 +70,65 @@ const WebEngineCanvas: React.FC<WebEngineCanvasProps> = ({
       // Subscribe to router state changes
       const unsubscribe = router.subscribe(state => {
         console.log("WebEngineCanvas: Router state changed", state)
-        setRouterState(state)
 
-        if (onRouteChange) {
-          onRouteChange(state)
+        if (state.currentScene?.root) {
+          console.log("WebEngineCanvas: Loading scene", state.currentScene.id)
+
+          // Create the tree service for the new scene
+          const newTreeService = new WebObjectTreeService(
+            state.currentScene.root
+          )
+
+          // If we have a current scene, start transition
+          if (treeService) {
+            setIsTransitioning(true)
+            setTreeService(newTreeService)
+            setRouterState(state)
+            setIsTransitioning(false)
+
+            if (onRouteChange) {
+              onRouteChange(state)
+            }
+          } else {
+            // Initial load, no transition needed
+            setTreeService(newTreeService)
+            setRouterState(state)
+
+            if (onRouteChange) {
+              onRouteChange(state)
+            }
+          }
+        } else {
+          // No scene found
+          setTreeService(null)
+          setRouterState(state)
+          setIsTransitioning(false)
+
+          if (onRouteChange) {
+            onRouteChange(state)
+          }
         }
       })
 
       // Get initial state
-      setRouterState(router.getState())
+      const initialState = router.getState()
+      if (initialState.currentScene?.root) {
+        const initialService = new WebObjectTreeService(
+          initialState.currentScene.root
+        )
+        setTreeService(initialService)
+      }
+      setRouterState(initialState)
 
       return unsubscribe
     }
-  }, [manifest, onRouteChange])
-
-  // Initialize the tree service when current scene changes
-  useEffect(() => {
-    if (routerState?.currentScene?.root) {
-      console.log(
-        "WebEngineCanvas: Creating tree service with scene root",
-        routerState.currentScene.root
-      )
-      const service = new WebObjectTreeService(routerState.currentScene.root)
-      setTreeService(service)
-      console.log("WebEngineCanvas: Tree service created", service.getTree())
-    } else {
-      console.log("WebEngineCanvas: No valid scene root found")
-      setTreeService(null)
-    }
-  }, [routerState?.currentScene])
+  }, [manifest, onRouteChange, treeService])
 
   // Memoized context methods to prevent recreation
   const updateWebObject = useCallback(
     (id: string, updates: Partial<WebObject>) => {
       if (treeService) {
         treeService.updateNode(id, updates)
-        setForceUpdate(prev => prev + 1)
       }
     },
     [treeService]
@@ -113,7 +138,6 @@ const WebEngineCanvas: React.FC<WebEngineCanvasProps> = ({
     (parentId: string, webObject: WebObject) => {
       if (treeService) {
         treeService.addNode(parentId, webObject)
-        setForceUpdate(prev => prev + 1)
       }
     },
     [treeService]
@@ -123,7 +147,6 @@ const WebEngineCanvas: React.FC<WebEngineCanvasProps> = ({
     (id: string) => {
       if (treeService) {
         treeService.removeNode(id)
-        setForceUpdate(prev => prev + 1)
       }
     },
     [treeService]
@@ -133,7 +156,6 @@ const WebEngineCanvas: React.FC<WebEngineCanvasProps> = ({
     (id: string, newParentId: string) => {
       if (treeService) {
         treeService.moveNode(id, newParentId)
-        setForceUpdate(prev => prev + 1)
       }
     },
     [treeService]
@@ -191,7 +213,6 @@ const WebEngineCanvas: React.FC<WebEngineCanvasProps> = ({
     addWebObject,
     removeWebObject,
     moveWebObject,
-    forceUpdate,
   ])
 
   // Notify when context is ready
@@ -242,18 +263,23 @@ const WebEngineCanvas: React.FC<WebEngineCanvasProps> = ({
       }}
     >
       {treeService && routerState?.currentScene ? (
-        <WebObjectComponent
-          key={`${routerState.currentScene.id}-${forceUpdate}`} // Force re-render when scene changes
-          webObject={treeService.getTree().root}
-          context={webObjectContext || undefined}
-          onWebObjectReady={handleWebObjectReady}
-          onWebObjectUpdate={handleWebObjectUpdate}
-        />
+        <div
+          key={routerState.currentScene.id}
+          style={{
+            opacity: isTransitioning ? 0.8 : 1,
+            transition: "opacity 0.15s ease-in-out",
+          }}
+        >
+          <WebObjectComponent
+            webObject={treeService.getTree().root}
+            context={webObjectContext || undefined}
+            onWebObjectReady={handleWebObjectReady}
+            onWebObjectUpdate={handleWebObjectUpdate}
+          />
+        </div>
       ) : (
         <div style={{ padding: "2rem", textAlign: "center", color: "#666" }}>
-          {routerState?.currentScene
-            ? "Loading scene..."
-            : "No scene found for current route"}
+          No scene found for current route
         </div>
       )}
     </div>
