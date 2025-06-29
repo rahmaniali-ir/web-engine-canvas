@@ -82,7 +82,7 @@ const WebObjectComponent: React.FC<WebObjectProps> = React.memo(
         }
 
         // Fallback: try to find prefab in assets (legacy support)
-        const assets = context.manifest.assets.assets
+        const assets = context.manifest.assets
         let prefabAsset
 
         if (assets instanceof Map) {

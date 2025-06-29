@@ -234,20 +234,22 @@ export const useAssets = () => {
 
   // Import/Export
   const exportAssetManifest = useCallback(() => {
-    return assetService.exportAssetManifest()
-  }, [assetService])
+    // TODO: Implement asset manifest export
+    console.warn("exportAssetManifest not implemented")
+    return null
+  }, [])
 
-  const importAssetManifest = useCallback(
-    (manifest: AssetManifest) => {
-      assetService.importAssetManifest(manifest)
-    },
-    [assetService]
-  )
+  const importAssetManifest = useCallback((_manifest: AssetManifest) => {
+    // TODO: Implement asset manifest import
+    console.warn("importAssetManifest not implemented")
+  }, [])
 
   // Registry access
   const getRegistry = useCallback(() => {
-    return assetService.getRegistry()
-  }, [assetService])
+    // TODO: Implement registry access
+    console.warn("getRegistry not implemented")
+    return new Map()
+  }, [])
 
   // Initialize from manifest
   const initializeFromManifest = useCallback(
