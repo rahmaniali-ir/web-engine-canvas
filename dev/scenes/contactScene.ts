@@ -57,7 +57,11 @@ const contactScene: Scene = {
             id: "contact-header-material",
             type: "material",
             config: {
-              background: "primary-gradient",
+              backgroundImage: "contact-bg",
+              backgroundSize: "cover",
+              backgroundPosition: "center",
+              backgroundRepeat: "no-repeat",
+              backgroundAttachment: "fixed",
             },
           },
           {

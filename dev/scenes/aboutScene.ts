@@ -57,7 +57,11 @@ const aboutScene: Scene = {
             id: "about-header-material",
             type: "material",
             config: {
-              background: "primary-gradient",
+              backgroundImage: "about-bg",
+              backgroundSize: "cover",
+              backgroundPosition: "center",
+              backgroundRepeat: "no-repeat",
+              backgroundAttachment: "fixed",
             },
           },
           {

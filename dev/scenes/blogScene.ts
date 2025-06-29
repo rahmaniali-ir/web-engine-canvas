@@ -57,7 +57,11 @@ const blogScene: Scene = {
             id: "blog-header-material",
             type: "material",
             config: {
-              background: "primary-gradient",
+              backgroundImage: "blog-bg",
+              backgroundSize: "cover",
+              backgroundPosition: "center",
+              backgroundRepeat: "no-repeat",
+              backgroundAttachment: "fixed",
             },
           },
           {

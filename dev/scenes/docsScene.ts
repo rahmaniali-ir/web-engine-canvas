@@ -57,7 +57,11 @@ const docsScene: Scene = {
             id: "docs-header-material",
             type: "material",
             config: {
-              background: "primary-gradient",
+              backgroundImage: "docs-bg",
+              backgroundSize: "cover",
+              backgroundPosition: "center",
+              backgroundRepeat: "no-repeat",
+              backgroundAttachment: "fixed",
             },
           },
           {

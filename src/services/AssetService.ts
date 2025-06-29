@@ -211,6 +211,11 @@ export class AssetService {
           return resolved as T
         }
 
+        // Special handling for resource assets (images, etc.)
+        if (asset.type === "resource" && typeof resolved === "string") {
+          return resolved as T
+        }
+
         return resolved as T
       }
     }

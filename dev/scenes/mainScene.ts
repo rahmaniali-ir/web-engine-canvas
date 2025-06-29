@@ -57,7 +57,11 @@ const mainScene: Scene = {
             id: "hero-material",
             type: "material",
             config: {
-              background: "primary-gradient",
+              backgroundImage: "hero-bg",
+              backgroundSize: "cover",
+              backgroundPosition: "center",
+              backgroundRepeat: "no-repeat",
+              backgroundAttachment: "fixed",
             },
           },
           {

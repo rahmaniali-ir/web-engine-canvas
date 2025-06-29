@@ -159,7 +159,16 @@ export class WebObjectComponentService {
         element.style.opacity = resolvedConfig.opacity.toString()
       }
       if (resolvedConfig.backgroundImage !== undefined) {
-        element.style.backgroundImage = resolvedConfig.backgroundImage
+        // Wrap URLs in url() for CSS compatibility
+        const bgImage = resolvedConfig.backgroundImage
+        if (
+          typeof bgImage === "string" &&
+          (bgImage.startsWith("http") || bgImage.startsWith("/"))
+        ) {
+          element.style.backgroundImage = `url(${bgImage})`
+        } else {
+          element.style.backgroundImage = bgImage
+        }
       }
       if (resolvedConfig.backgroundSize !== undefined) {
         element.style.backgroundSize = resolvedConfig.backgroundSize
@@ -169,6 +178,9 @@ export class WebObjectComponentService {
       }
       if (resolvedConfig.backgroundRepeat !== undefined) {
         element.style.backgroundRepeat = resolvedConfig.backgroundRepeat
+      }
+      if (resolvedConfig.backgroundAttachment !== undefined) {
+        element.style.backgroundAttachment = resolvedConfig.backgroundAttachment
       }
       if (resolvedConfig.backdropFilter !== undefined) {
         element.style.backdropFilter = resolvedConfig.backdropFilter
