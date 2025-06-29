@@ -2,6 +2,7 @@ import React, { useRef, useEffect, useState, useCallback, useMemo } from "react"
 import { Manifest, WebObject, WebObjectContext } from "../types"
 import { WebObjectTreeService } from "../services/WebObjectTreeService"
 import { RouterService, RouterState } from "../services/RouterService"
+import { AssetService } from "../services/AssetService"
 import WebObjectComponent from "./WebObject"
 
 export interface WebEngineCanvasProps {
@@ -28,8 +29,33 @@ const WebEngineCanvas: React.FC<WebEngineCanvasProps> = ({
   const [treeService, setTreeService] = useState<WebObjectTreeService | null>(
     null
   )
+  const [assetService, setAssetService] = useState<AssetService | null>(null)
   const [routerState, setRouterState] = useState<RouterState | null>(null)
   const [forceUpdate, setForceUpdate] = useState(0)
+
+  // Initialize the asset service when manifest changes
+  useEffect(() => {
+    if (manifest?.assets) {
+      const assetService = new AssetService()
+
+      // Initialize with assets from manifest
+      let assets: any[] = []
+      if (manifest.assets.assets instanceof Map) {
+        assets = Array.from(manifest.assets.assets.values())
+      } else {
+        // Handle plain object storage
+        assets = Object.values(manifest.assets.assets)
+      }
+
+      assetService.initializeFromManifest(assets)
+      setAssetService(assetService)
+      console.log(
+        "WebEngineCanvas: AssetService initialized with",
+        assets.length,
+        "assets"
+      )
+    }
+  }, [manifest?.assets])
 
   // Initialize the router service when manifest changes
   useEffect(() => {
@@ -144,6 +170,7 @@ const WebEngineCanvas: React.FC<WebEngineCanvasProps> = ({
       manifest,
       webObjectTree: treeService.getTree(),
       routerState,
+      assetService,
       navigate,
       goBack,
       goForward,
@@ -156,6 +183,7 @@ const WebEngineCanvas: React.FC<WebEngineCanvasProps> = ({
     treeService,
     manifest,
     routerState,
+    assetService,
     navigate,
     goBack,
     goForward,

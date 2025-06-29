@@ -1,6 +1,7 @@
 import React, { useRef, useEffect, useCallback, useMemo } from "react"
 import { WebObject, WebObjectContext } from "../types"
 import { WebObjectComponentService } from "../services/WebObjectComponentService"
+import { AssetService } from "../services/AssetService"
 import LinkWebObjectComponent from "./specialized/LinkWebObject"
 
 export interface WebObjectProps {
@@ -18,17 +19,136 @@ const WebObjectComponent: React.FC<WebObjectProps> = ({
 }) => {
   const elementRef = useRef<HTMLElement>(null)
   const componentService = useMemo(() => new WebObjectComponentService(), [])
+  const assetService =
+    context?.assetService || useMemo(() => new AssetService(), [])
+
+  // Helper function to apply parameters to WebObject
+  const applyParametersToWebObject = (
+    webObj: WebObject,
+    parameters: Record<string, any>
+  ) => {
+    // Apply to content
+    if (webObj.content && typeof webObj.content === "string") {
+      Object.entries(parameters).forEach(([key, value]) => {
+        webObj.content = webObj.content?.replace(`\${${key}}`, String(value))
+      })
+    }
+
+    // Apply to components
+    if (webObj.components) {
+      webObj.components.forEach(component => {
+        Object.entries(parameters).forEach(([key, value]) => {
+          if (component.config && typeof component.config === "object") {
+            Object.entries(component.config).forEach(
+              ([configKey, configValue]) => {
+                if (typeof configValue === "string") {
+                  component.config[configKey] = configValue.replace(
+                    `\${${key}}`,
+                    String(value)
+                  )
+                }
+              }
+            )
+          }
+        })
+      })
+    }
+
+    // Recursively apply to children
+    if (webObj.children) {
+      webObj.children.forEach(child =>
+        applyParametersToWebObject(child, parameters)
+      )
+    }
+  }
+
+  // Check if this WebObject is a prefab instance
+  const prefabId = webObject.metadata?.prefabId || webObject.metadata?.prefab
+  const prefabParameters = webObject.metadata?.parameters
+
+  // Instantiate prefab if needed
+  const instantiatedWebObject = useMemo(() => {
+    if (!prefabId || !context?.manifest) return webObject
+
+    try {
+      // First try to find prefab in the prefabs array
+      if (context.manifest.prefabs) {
+        const prefab = context.manifest.prefabs.find(p => p.id === prefabId)
+        if (prefab) {
+          // Deep clone the template
+          const instance = JSON.parse(JSON.stringify(prefab.template))
+
+          // Apply default values
+          if (prefab.defaultValues) {
+            applyParametersToWebObject(instance, prefab.defaultValues)
+          }
+
+          // Apply provided parameters
+          if (prefabParameters) {
+            applyParametersToWebObject(instance, prefabParameters)
+          }
+
+          // Merge with original WebObject properties (like id, metadata, etc.)
+          return {
+            ...instance,
+            id: webObject.id,
+            metadata: webObject.metadata,
+          }
+        }
+      }
+
+      // Fallback: try to find prefab in assets (legacy support)
+      const assets = context.manifest.assets.assets
+      let prefabAsset
+
+      if (assets instanceof Map) {
+        prefabAsset = assets.get(prefabId)
+      } else {
+        // Handle plain object storage
+        prefabAsset = assets[prefabId]
+      }
+
+      if (!prefabAsset || prefabAsset.type !== "prefab") {
+        console.warn(`Prefab not found: ${prefabId}`)
+        return webObject
+      }
+
+      // Deep clone the template
+      const instance = JSON.parse(JSON.stringify(prefabAsset.template))
+
+      // Apply default values
+      if (prefabAsset.defaultValues) {
+        applyParametersToWebObject(instance, prefabAsset.defaultValues)
+      }
+
+      // Apply provided parameters
+      if (prefabParameters) {
+        applyParametersToWebObject(instance, prefabParameters)
+      }
+
+      // Merge with original WebObject properties (like id, metadata, etc.)
+      return {
+        ...instance,
+        id: webObject.id,
+        metadata: webObject.metadata,
+      }
+    } catch (error) {
+      console.error(`Error instantiating prefab ${prefabId}:`, error)
+      return webObject
+    }
+  }, [prefabId, prefabParameters, webObject, context?.manifest])
 
   // Apply components to the element
   const applyComponents = useCallback(() => {
-    if (!elementRef.current || !webObject.components) return
+    if (!elementRef.current || !instantiatedWebObject.components) return
 
     const element = elementRef.current
-    const computedStyles = componentService.computeStyles(webObject.components)
-
-    // Apply computed styles
-    Object.assign(element.style, computedStyles)
-  }, [webObject.components, componentService])
+    componentService.applyComponents(
+      element,
+      instantiatedWebObject,
+      assetService
+    )
+  }, [instantiatedWebObject.components, componentService, assetService])
 
   // Apply components when they change
   useEffect(() => {
@@ -38,19 +158,66 @@ const WebObjectComponent: React.FC<WebObjectProps> = ({
   // Notify when element is ready
   useEffect(() => {
     if (elementRef.current && onWebObjectReady) {
-      onWebObjectReady(elementRef.current, webObject)
+      onWebObjectReady(elementRef.current, instantiatedWebObject)
     }
-  }, [webObject, onWebObjectReady])
+  }, [instantiatedWebObject, onWebObjectReady])
+
+  // List of void elements in HTML
+  const voidElements = [
+    "area",
+    "base",
+    "br",
+    "col",
+    "embed",
+    "hr",
+    "img",
+    "input",
+    "link",
+    "meta",
+    "param",
+    "source",
+    "track",
+    "wbr",
+  ]
+
+  // Helper function to render elements with components applied
+  const renderElement = (ElementType: string, props: any = {}) => {
+    const isVoid = voidElements.includes(ElementType)
+    if (isVoid) {
+      return React.createElement(ElementType, {
+        ref: elementRef,
+        ...props,
+      })
+    }
+    return React.createElement(
+      ElementType,
+      {
+        ref: elementRef,
+        ...props,
+      },
+      instantiatedWebObject.content &&
+        React.createElement("span", null, instantiatedWebObject.content),
+      ...(instantiatedWebObject.children?.map((child: WebObject) =>
+        React.createElement(WebObjectComponent, {
+          key: child.id,
+          webObject: child,
+          context: context,
+          onWebObjectReady: onWebObjectReady,
+          onWebObjectUpdate: onWebObjectUpdate,
+        })
+      ) || [])
+    )
+  }
 
   // Handle specialized WebObject types
-  if (webObject.type === "link") {
+  if (instantiatedWebObject.type === "link") {
     if (!context) {
       console.warn("LinkWebObject requires context for navigation")
       return null
     }
     return (
       <LinkWebObjectComponent
-        webObject={webObject}
+        webObject={instantiatedWebObject}
         context={context}
         onWebObjectReady={onWebObjectReady}
         onWebObjectUpdate={onWebObjectUpdate}
@@ -59,133 +226,63 @@ const WebObjectComponent: React.FC<WebObjectProps> = ({
   }
 
   // Handle other specialized types
-  if (webObject.type === "button") {
-    return (
-      <button
-        ref={elementRef as React.RefObject<HTMLButtonElement>}
-        disabled={webObject.disabled}
-        onClick={event => {
-          if (webObject.onClick && context) {
-            const handler = context[
-              webObject.onClick as keyof WebObjectContext
-            ] as Function
-            if (handler) handler(event)
-          }
-        }}
-      >
-        {webObject.content && <span>{webObject.content}</span>}
-        {webObject.children?.map(child => (
-          <WebObjectComponent
-            key={child.id}
-            webObject={child}
-            context={context}
-            onWebObjectReady={onWebObjectReady}
-            onWebObjectUpdate={onWebObjectUpdate}
-          />
-        ))}
-      </button>
-    )
+  if (instantiatedWebObject.type === "button") {
+    return renderElement("button", {
+      disabled: instantiatedWebObject.disabled,
+      onClick: (event: React.MouseEvent) => {
+        if (instantiatedWebObject.onClick && context) {
+          const handler = context[
+            instantiatedWebObject.onClick as keyof WebObjectContext
+          ] as Function
+          if (handler) handler(event)
+        }
+      },
+    })
   }
 
-  if (webObject.type === "input") {
-    return (
-      <input
-        ref={elementRef as React.RefObject<HTMLInputElement>}
-        type={webObject.inputType}
-        placeholder={webObject.placeholder}
-        value={webObject.value}
-        disabled={webObject.disabled}
-        required={webObject.required}
-        onChange={event => {
-          if (webObject.onChange && context) {
-            const handler = context[
-              webObject.onChange as keyof WebObjectContext
-            ] as Function
-            if (handler) handler(event)
-          }
-        }}
-      />
-    )
+  if (instantiatedWebObject.type === "input") {
+    return renderElement("input", {
+      type: instantiatedWebObject.inputType,
+      placeholder: instantiatedWebObject.placeholder,
+      value: instantiatedWebObject.value,
+      disabled: instantiatedWebObject.disabled,
+      required: instantiatedWebObject.required,
+      onChange: (event: React.ChangeEvent<HTMLInputElement>) => {
+        if (instantiatedWebObject.onChange && context) {
+          const handler = context[
+            instantiatedWebObject.onChange as keyof WebObjectContext
+          ] as Function
+          if (handler) handler(event)
+        }
+      },
+    })
   }
 
-  if (webObject.type === "image") {
-    return (
-      <img
-        ref={elementRef as React.RefObject<HTMLImageElement>}
-        src={webObject.src}
-        alt={webObject.alt}
-        width={webObject.width}
-        height={webObject.height}
-      />
-    )
+  if (instantiatedWebObject.type === "image") {
+    return renderElement("img", {
+      src: instantiatedWebObject.src,
+      alt: instantiatedWebObject.alt,
+      width: instantiatedWebObject.width,
+      height: instantiatedWebObject.height,
+    })
   }
 
-  if (webObject.type === "heading") {
-    return (
-      <div ref={elementRef as React.RefObject<HTMLDivElement>}>
-        {webObject.content && <span>{webObject.content}</span>}
-        {webObject.children?.map(child => (
-          <WebObjectComponent
-            key={child.id}
-            webObject={child}
-            context={context}
-            onWebObjectReady={onWebObjectReady}
-            onWebObjectUpdate={onWebObjectUpdate}
-          />
-        ))}
-      </div>
-    )
+  if (instantiatedWebObject.type === "heading") {
+    const headingLevel = instantiatedWebObject.level || 1
+    const headingTag = `h${headingLevel}`
+    return renderElement(headingTag)
   }
 
-  if (webObject.type === "paragraph") {
-    return (
-      <p ref={elementRef as React.RefObject<HTMLParagraphElement>}>
-        {webObject.content && <span>{webObject.content}</span>}
-        {webObject.children?.map(child => (
-          <WebObjectComponent
-            key={child.id}
-            webObject={child}
-            context={context}
-            onWebObjectReady={onWebObjectReady}
-            onWebObjectUpdate={onWebObjectUpdate}
-          />
-        ))}
-      </p>
-    )
+  if (instantiatedWebObject.type === "paragraph") {
+    return renderElement("p")
   }
 
-  if (webObject.type === "span") {
-    return (
-      <span ref={elementRef as React.RefObject<HTMLSpanElement>}>
-        {webObject.content && <span>{webObject.content}</span>}
-        {webObject.children?.map(child => (
-          <WebObjectComponent
-            key={child.id}
-            webObject={child}
-            context={context}
-            onWebObjectReady={onWebObjectReady}
-            onWebObjectUpdate={onWebObjectUpdate}
-          />
-        ))}
-      </span>
-    )
+  if (instantiatedWebObject.type === "span") {
+    return renderElement("span")
   }
 
   // Default div WebObject
-  return (
-    <div ref={elementRef as React.RefObject<HTMLDivElement>}>
-      {webObject.content && <span>{webObject.content}</span>}
-      {webObject.children?.map(child => (
-        <WebObjectComponent
-          key={child.id}
-          webObject={child}
-          context={context}
-          onWebObjectReady={onWebObjectReady}
-          onWebObjectUpdate={onWebObjectUpdate}
-        />
-      ))}
-    </div>
-  )
+  return renderElement("div")
 }
 
 export default WebObjectComponent

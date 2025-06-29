@@ -1,8 +1,9 @@
 import { WebObjectComponent } from "../WebObjectComponent"
+import { AssetValue } from "../Asset"
 
 export interface BoxShadowComponent extends WebObjectComponent {
   type: "boxShadow"
   config: {
-    boxShadow?: string
+    boxShadow?: AssetValue<string>
   }
 }

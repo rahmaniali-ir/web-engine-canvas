@@ -12,3 +12,9 @@ export * from "./Manifest"
 
 // Context types
 export * from "./Context"
+
+// Prefab types
+export * from "./Prefab"
+
+// Asset types
+export * from "./Asset"

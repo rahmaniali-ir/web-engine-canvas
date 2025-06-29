@@ -1,9 +1,10 @@
 import { WebObjectComponent } from "../WebObjectComponent"
+import { AssetValue } from "../Asset"
 
 export interface FilterComponent extends WebObjectComponent {
   type: "filter"
   config: {
-    filter?: string
-    backdropFilter?: string
+    filter?: AssetValue<string>
+    backdropFilter?: AssetValue<string>
   }
 }

@@ -1,18 +1,20 @@
-// Main library entry point
+// Main library exports - Public API only
+
+// Export WebEngineCanvas component (main public API)
 export { default as WebEngineCanvas } from "./components/WebEngineCanvas"
-export type { WebEngineCanvasProps } from "./components/WebEngineCanvas"
 
-// Export WebObject component
-export { default as WebObject } from "./components/WebObject"
+// Export public types that developers need
+export type { Manifest } from "./types/Manifest"
+export type { WebObjectContext } from "./types/Context"
 
-// Export hooks
-export { useWebObjects } from "./hooks/useWebObjects"
+// Export WebObject types for manifest definition
+export type { WebObject } from "./types/WebObject"
+export type { WebObjectComponent } from "./types/WebObjectComponent"
 
-// Export types
+// Export component types for manifest definition
 export type {
-  WebObject as WebObjectType,
-  WebObjectComponent,
   MeshComponent,
+  MaterialComponent,
   MarginComponent,
   PaddingComponent,
   BorderComponent,
@@ -21,17 +23,26 @@ export type {
   InteractionComponent,
   TransitionComponent,
   BoxShadowComponent,
-  MaterialComponent,
-  Manifest,
-  Scene,
-  Route,
-  WebObjectContext,
-  WebObjectTree,
   FilterComponent,
-} from "./types"
+} from "./types/components"
 
-// Export services
-export { WebObjectTreeService } from "./services/WebObjectTreeService"
-export { WebObjectComponentService } from "./services/WebObjectComponentService"
-export { RouterService } from "./services/RouterService"
-export type { RouterState } from "./services/RouterService"
+// Export asset types for manifest definition
+export type {
+  Asset,
+  AssetType,
+  AssetReference,
+  AssetValue,
+  AssetRegistry,
+  ResourceAsset,
+  PrefabAsset,
+  ComponentAsset,
+  StylePaletteAsset,
+  AnimationAsset,
+  JsonAsset,
+  ScriptAsset,
+  ShaderAsset,
+  AudioAsset,
+  VideoAsset,
+  FontAsset,
+  IconAsset,
+} from "./types/Asset"

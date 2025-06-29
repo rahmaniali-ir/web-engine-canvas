@@ -11,13 +11,15 @@ import {
   TransitionComponent,
   BoxShadowComponent,
   FilterComponent,
+  CssComponent,
 } from "../types"
 import { WebObjectComponent } from "../types/WebObjectComponent"
+import { AssetService } from "./AssetService"
 
 export class WebObjectComponentService {
   private componentRegistry: Map<
     string,
-    (element: HTMLElement, config: any) => void
+    (element: HTMLElement, config: any, assetService?: AssetService) => void
   > = new Map()
 
   constructor() {
@@ -25,206 +27,473 @@ export class WebObjectComponentService {
   }
 
   private registerDefaultComponents() {
-    // Register Mesh component
-    this.componentRegistry.set(
-      "mesh",
-      (element: HTMLElement, config: MeshComponent["config"]) => {
-        if (config.display) element.style.display = config.display
-        if (config.position) element.style.position = config.position
-        if (config.top !== undefined)
-          element.style.top = this.formatValue(config.top)
-        if (config.right !== undefined)
-          element.style.right = this.formatValue(config.right)
-        if (config.bottom !== undefined)
-          element.style.bottom = this.formatValue(config.bottom)
-        if (config.left !== undefined)
-          element.style.left = this.formatValue(config.left)
-        if (config.width !== undefined)
-          element.style.width = this.formatValue(config.width)
-        if (config.height !== undefined)
-          element.style.height = this.formatValue(config.height)
-        if (config.maxWidth !== undefined)
-          element.style.maxWidth = this.formatValue(config.maxWidth)
-        if (config.zIndex !== undefined)
-          element.style.zIndex = config.zIndex.toString()
-        if (config.flexDirection)
-          element.style.flexDirection = config.flexDirection
-        if (config.justifyContent)
-          element.style.justifyContent = config.justifyContent
-        if (config.alignItems) element.style.alignItems = config.alignItems
-        if (config.gap !== undefined)
-          element.style.gap = this.formatValue(config.gap)
-        if (config.gridTemplateColumns)
-          element.style.gridTemplateColumns = config.gridTemplateColumns
-      }
-    )
+    // Register mesh component handler
+    this.componentRegistry.set("mesh", (element, config, assetService) => {
+      const resolvedConfig = this.resolveComponentConfig(config, assetService)
 
-    // Register Margin component
-    this.componentRegistry.set(
-      "margin",
-      (element: HTMLElement, config: MarginComponent["config"]) => {
-        if (config.margin) element.style.margin = config.margin
-        if (config.marginTop !== undefined)
-          element.style.marginTop = this.formatValue(config.marginTop)
-        if (config.marginRight !== undefined)
-          element.style.marginRight = this.formatValue(config.marginRight)
-        if (config.marginBottom !== undefined)
-          element.style.marginBottom = this.formatValue(config.marginBottom)
-        if (config.marginLeft !== undefined)
-          element.style.marginLeft = this.formatValue(config.marginLeft)
+      // Layout properties
+      if (resolvedConfig.display !== undefined) {
+        element.style.display = resolvedConfig.display
       }
-    )
-
-    // Register Padding component
-    this.componentRegistry.set(
-      "padding",
-      (element: HTMLElement, config: PaddingComponent["config"]) => {
-        if (config.padding) element.style.padding = config.padding
-        if (config.paddingTop !== undefined)
-          element.style.paddingTop = this.formatValue(config.paddingTop)
-        if (config.paddingRight !== undefined)
-          element.style.paddingRight = this.formatValue(config.paddingRight)
-        if (config.paddingBottom !== undefined)
-          element.style.paddingBottom = this.formatValue(config.paddingBottom)
-        if (config.paddingLeft !== undefined)
-          element.style.paddingLeft = this.formatValue(config.paddingLeft)
+      if (resolvedConfig.flexDirection !== undefined) {
+        element.style.flexDirection = resolvedConfig.flexDirection
       }
-    )
-
-    // Register Border component
-    this.componentRegistry.set(
-      "border",
-      (element: HTMLElement, config: BorderComponent["config"]) => {
-        if (config.border) element.style.border = config.border
-        if (config.borderTop) element.style.borderTop = config.borderTop
-        if (config.borderRight) element.style.borderRight = config.borderRight
-        if (config.borderBottom)
-          element.style.borderBottom = config.borderBottom
-        if (config.borderLeft) element.style.borderLeft = config.borderLeft
+      if (resolvedConfig.justifyContent !== undefined) {
+        element.style.justifyContent = resolvedConfig.justifyContent
       }
-    )
+      if (resolvedConfig.alignItems !== undefined) {
+        element.style.alignItems = resolvedConfig.alignItems
+      }
+      if (resolvedConfig.gap !== undefined) {
+        element.style.gap = resolvedConfig.gap
+      }
+      if (resolvedConfig.flexWrap !== undefined) {
+        element.style.flexWrap = resolvedConfig.flexWrap
+      }
+      if (resolvedConfig.gridTemplateColumns !== undefined) {
+        element.style.gridTemplateColumns = resolvedConfig.gridTemplateColumns
+      }
+      if (resolvedConfig.gridTemplateRows !== undefined) {
+        element.style.gridTemplateRows = resolvedConfig.gridTemplateRows
+      }
+      if (resolvedConfig.gridGap !== undefined) {
+        element.style.gridGap = resolvedConfig.gridGap
+      }
 
-    // Register BorderRadius component
+      // Sizing properties
+      if (resolvedConfig.width !== undefined) {
+        element.style.width =
+          typeof resolvedConfig.width === "number"
+            ? `${resolvedConfig.width}px`
+            : resolvedConfig.width
+      }
+      if (resolvedConfig.height !== undefined) {
+        element.style.height =
+          typeof resolvedConfig.height === "number"
+            ? `${resolvedConfig.height}px`
+            : resolvedConfig.height
+      }
+      if (resolvedConfig.minWidth !== undefined) {
+        element.style.minWidth =
+          typeof resolvedConfig.minWidth === "number"
+            ? `${resolvedConfig.minWidth}px`
+            : resolvedConfig.minWidth
+      }
+      if (resolvedConfig.minHeight !== undefined) {
+        element.style.minHeight =
+          typeof resolvedConfig.minHeight === "number"
+            ? `${resolvedConfig.minHeight}px`
+            : resolvedConfig.minHeight
+      }
+      if (resolvedConfig.maxWidth !== undefined) {
+        element.style.maxWidth =
+          typeof resolvedConfig.maxWidth === "number"
+            ? `${resolvedConfig.maxWidth}px`
+            : resolvedConfig.maxWidth
+      }
+      if (resolvedConfig.maxHeight !== undefined) {
+        element.style.maxHeight =
+          typeof resolvedConfig.maxHeight === "number"
+            ? `${resolvedConfig.maxHeight}px`
+            : resolvedConfig.maxHeight
+      }
+
+      // Position properties
+      if (resolvedConfig.position !== undefined) {
+        element.style.position = resolvedConfig.position
+      }
+      if (resolvedConfig.top !== undefined) {
+        element.style.top =
+          typeof resolvedConfig.top === "number"
+            ? `${resolvedConfig.top}px`
+            : resolvedConfig.top
+      }
+      if (resolvedConfig.left !== undefined) {
+        element.style.left =
+          typeof resolvedConfig.left === "number"
+            ? `${resolvedConfig.left}px`
+            : resolvedConfig.left
+      }
+      if (resolvedConfig.right !== undefined) {
+        element.style.right =
+          typeof resolvedConfig.right === "number"
+            ? `${resolvedConfig.right}px`
+            : resolvedConfig.right
+      }
+      if (resolvedConfig.bottom !== undefined) {
+        element.style.bottom =
+          typeof resolvedConfig.bottom === "number"
+            ? `${resolvedConfig.bottom}px`
+            : resolvedConfig.bottom
+      }
+      if (resolvedConfig.zIndex !== undefined) {
+        element.style.zIndex = resolvedConfig.zIndex.toString()
+      }
+
+      // Flex properties
+      if (resolvedConfig.flexGrow !== undefined) {
+        element.style.flexGrow = resolvedConfig.flexGrow.toString()
+      }
+      if (resolvedConfig.flexShrink !== undefined) {
+        element.style.flexShrink = resolvedConfig.flexShrink.toString()
+      }
+      if (resolvedConfig.flexBasis !== undefined) {
+        element.style.flexBasis = resolvedConfig.flexBasis
+      }
+      if (resolvedConfig.order !== undefined) {
+        element.style.order = resolvedConfig.order.toString()
+      }
+    })
+
+    // Register material component handler
+    this.componentRegistry.set("material", (element, config, assetService) => {
+      const resolvedConfig = this.resolveComponentConfig(config, assetService)
+
+      if (resolvedConfig.backgroundColor !== undefined) {
+        element.style.backgroundColor = resolvedConfig.backgroundColor
+      }
+      if (resolvedConfig.color !== undefined) {
+        element.style.color = resolvedConfig.color
+      }
+      if (resolvedConfig.opacity !== undefined) {
+        element.style.opacity = resolvedConfig.opacity.toString()
+      }
+      if (resolvedConfig.backgroundImage !== undefined) {
+        element.style.backgroundImage = resolvedConfig.backgroundImage
+      }
+      if (resolvedConfig.backgroundSize !== undefined) {
+        element.style.backgroundSize = resolvedConfig.backgroundSize
+      }
+      if (resolvedConfig.backgroundPosition !== undefined) {
+        element.style.backgroundPosition = resolvedConfig.backgroundPosition
+      }
+      if (resolvedConfig.backgroundRepeat !== undefined) {
+        element.style.backgroundRepeat = resolvedConfig.backgroundRepeat
+      }
+      if (resolvedConfig.backdropFilter !== undefined) {
+        element.style.backdropFilter = resolvedConfig.backdropFilter
+      }
+      if (resolvedConfig.mixBlendMode !== undefined) {
+        element.style.mixBlendMode = resolvedConfig.mixBlendMode
+      }
+      if (resolvedConfig.background !== undefined) {
+        element.style.background = resolvedConfig.background
+      }
+    })
+
+    // Register margin component handler
+    this.componentRegistry.set("margin", (element, config, assetService) => {
+      const resolvedConfig = this.resolveComponentConfig(config, assetService)
+
+      if (resolvedConfig.margin !== undefined) {
+        element.style.margin = resolvedConfig.margin
+      }
+      if (resolvedConfig.marginTop !== undefined) {
+        element.style.marginTop =
+          typeof resolvedConfig.marginTop === "number"
+            ? `${resolvedConfig.marginTop}px`
+            : resolvedConfig.marginTop
+      }
+      if (resolvedConfig.marginRight !== undefined) {
+        element.style.marginRight =
+          typeof resolvedConfig.marginRight === "number"
+            ? `${resolvedConfig.marginRight}px`
+            : resolvedConfig.marginRight
+      }
+      if (resolvedConfig.marginBottom !== undefined) {
+        element.style.marginBottom =
+          typeof resolvedConfig.marginBottom === "number"
+            ? `${resolvedConfig.marginBottom}px`
+            : resolvedConfig.marginBottom
+      }
+      if (resolvedConfig.marginLeft !== undefined) {
+        element.style.marginLeft =
+          typeof resolvedConfig.marginLeft === "number"
+            ? `${resolvedConfig.marginLeft}px`
+            : resolvedConfig.marginLeft
+      }
+    })
+
+    // Register padding component handler
+    this.componentRegistry.set("padding", (element, config, assetService) => {
+      const resolvedConfig = this.resolveComponentConfig(config, assetService)
+
+      if (resolvedConfig.padding !== undefined) {
+        element.style.padding = resolvedConfig.padding
+      }
+      if (resolvedConfig.paddingTop !== undefined) {
+        element.style.paddingTop =
+          typeof resolvedConfig.paddingTop === "number"
+            ? `${resolvedConfig.paddingTop}px`
+            : resolvedConfig.paddingTop
+      }
+      if (resolvedConfig.paddingRight !== undefined) {
+        element.style.paddingRight =
+          typeof resolvedConfig.paddingRight === "number"
+            ? `${resolvedConfig.paddingRight}px`
+            : resolvedConfig.paddingRight
+      }
+      if (resolvedConfig.paddingBottom !== undefined) {
+        element.style.paddingBottom =
+          typeof resolvedConfig.paddingBottom === "number"
+            ? `${resolvedConfig.paddingBottom}px`
+            : resolvedConfig.paddingBottom
+      }
+      if (resolvedConfig.paddingLeft !== undefined) {
+        element.style.paddingLeft =
+          typeof resolvedConfig.paddingLeft === "number"
+            ? `${resolvedConfig.paddingLeft}px`
+            : resolvedConfig.paddingLeft
+      }
+    })
+
+    // Register border component handler
+    this.componentRegistry.set("border", (element, config, assetService) => {
+      const resolvedConfig = this.resolveComponentConfig(config, assetService)
+
+      if (resolvedConfig.border !== undefined) {
+        element.style.border = resolvedConfig.border
+      }
+      if (resolvedConfig.borderTop !== undefined) {
+        element.style.borderTop = resolvedConfig.borderTop
+      }
+      if (resolvedConfig.borderRight !== undefined) {
+        element.style.borderRight = resolvedConfig.borderRight
+      }
+      if (resolvedConfig.borderBottom !== undefined) {
+        element.style.borderBottom = resolvedConfig.borderBottom
+      }
+      if (resolvedConfig.borderLeft !== undefined) {
+        element.style.borderLeft = resolvedConfig.borderLeft
+      }
+      if (resolvedConfig.borderWidth !== undefined) {
+        element.style.borderWidth =
+          typeof resolvedConfig.borderWidth === "number"
+            ? `${resolvedConfig.borderWidth}px`
+            : resolvedConfig.borderWidth
+      }
+      if (resolvedConfig.borderStyle !== undefined) {
+        element.style.borderStyle = resolvedConfig.borderStyle
+      }
+      if (resolvedConfig.borderColor !== undefined) {
+        element.style.borderColor = resolvedConfig.borderColor
+      }
+    })
+
+    // Register border radius component handler
     this.componentRegistry.set(
       "borderRadius",
-      (element: HTMLElement, config: BorderRadiusComponent["config"]) => {
-        if (config.borderRadius)
-          element.style.borderRadius = config.borderRadius
-        if (config.borderTopLeftRadius)
-          element.style.borderTopLeftRadius = config.borderTopLeftRadius
-        if (config.borderTopRightRadius)
-          element.style.borderTopRightRadius = config.borderTopRightRadius
-        if (config.borderBottomRightRadius)
-          element.style.borderBottomRightRadius = config.borderBottomRightRadius
-        if (config.borderBottomLeftRadius)
-          element.style.borderBottomLeftRadius = config.borderBottomLeftRadius
+      (element, config, assetService) => {
+        const resolvedConfig = this.resolveComponentConfig(config, assetService)
+
+        if (resolvedConfig.borderRadius !== undefined) {
+          element.style.borderRadius = resolvedConfig.borderRadius
+        }
+        if (resolvedConfig.borderTopLeftRadius !== undefined) {
+          element.style.borderTopLeftRadius =
+            typeof resolvedConfig.borderTopLeftRadius === "number"
+              ? `${resolvedConfig.borderTopLeftRadius}px`
+              : resolvedConfig.borderTopLeftRadius
+        }
+        if (resolvedConfig.borderTopRightRadius !== undefined) {
+          element.style.borderTopRightRadius =
+            typeof resolvedConfig.borderTopRightRadius === "number"
+              ? `${resolvedConfig.borderTopRightRadius}px`
+              : resolvedConfig.borderTopRightRadius
+        }
+        if (resolvedConfig.borderBottomRightRadius !== undefined) {
+          element.style.borderBottomRightRadius =
+            typeof resolvedConfig.borderBottomRightRadius === "number"
+              ? `${resolvedConfig.borderBottomRightRadius}px`
+              : resolvedConfig.borderBottomRightRadius
+        }
+        if (resolvedConfig.borderBottomLeftRadius !== undefined) {
+          element.style.borderBottomLeftRadius =
+            typeof resolvedConfig.borderBottomLeftRadius === "number"
+              ? `${resolvedConfig.borderBottomLeftRadius}px`
+              : resolvedConfig.borderBottomLeftRadius
+        }
       }
     )
 
-    // Register Typography component
+    // Register typography component handler
     this.componentRegistry.set(
       "typography",
-      (element: HTMLElement, config: TypographyComponent["config"]) => {
-        if (config.fontSize) element.style.fontSize = config.fontSize
-        if (config.fontWeight)
-          element.style.fontWeight = config.fontWeight.toString()
-        if (config.fontFamily) element.style.fontFamily = config.fontFamily
-        if (config.textAlign) element.style.textAlign = config.textAlign
-        if (config.textDecoration)
-          element.style.textDecoration = config.textDecoration
+      (element, config, assetService) => {
+        const resolvedConfig = this.resolveComponentConfig(config, assetService)
+
+        if (resolvedConfig.fontFamily !== undefined) {
+          element.style.fontFamily = resolvedConfig.fontFamily
+        }
+        if (resolvedConfig.fontSize !== undefined) {
+          element.style.fontSize =
+            typeof resolvedConfig.fontSize === "number"
+              ? `${resolvedConfig.fontSize}px`
+              : resolvedConfig.fontSize
+        }
+        if (resolvedConfig.fontWeight !== undefined) {
+          element.style.fontWeight = resolvedConfig.fontWeight.toString()
+        }
+        if (resolvedConfig.fontStyle !== undefined) {
+          element.style.fontStyle = resolvedConfig.fontStyle
+        }
+        if (resolvedConfig.textAlign !== undefined) {
+          element.style.textAlign = resolvedConfig.textAlign
+        }
+        if (resolvedConfig.lineHeight !== undefined) {
+          element.style.lineHeight = resolvedConfig.lineHeight.toString()
+        }
+        if (resolvedConfig.letterSpacing !== undefined) {
+          element.style.letterSpacing =
+            typeof resolvedConfig.letterSpacing === "number"
+              ? `${resolvedConfig.letterSpacing}px`
+              : resolvedConfig.letterSpacing
+        }
+        if (resolvedConfig.textDecoration !== undefined) {
+          element.style.textDecoration = resolvedConfig.textDecoration
+        }
+        if (resolvedConfig.textTransform !== undefined) {
+          element.style.textTransform = resolvedConfig.textTransform
+        }
+        if (resolvedConfig.color !== undefined) {
+          element.style.color = resolvedConfig.color
+        }
+        if (resolvedConfig.textShadow !== undefined) {
+          element.style.textShadow = resolvedConfig.textShadow
+        }
+        if (resolvedConfig.whiteSpace !== undefined) {
+          element.style.whiteSpace = resolvedConfig.whiteSpace
+        }
+        if (resolvedConfig.overflow !== undefined) {
+          element.style.overflow = resolvedConfig.overflow
+        }
+        if (resolvedConfig.textOverflow !== undefined) {
+          element.style.textOverflow = resolvedConfig.textOverflow
+        }
       }
     )
 
-    // Register Interaction component
+    // Register interaction component handler
     this.componentRegistry.set(
       "interaction",
-      (element: HTMLElement, config: InteractionComponent["config"]) => {
-        if (config.cursor) element.style.cursor = config.cursor
+      (element, config, assetService) => {
+        const resolvedConfig = this.resolveComponentConfig(config, assetService)
+
+        if (resolvedConfig.cursor !== undefined) {
+          element.style.cursor = resolvedConfig.cursor
+        }
+        if (resolvedConfig.pointerEvents !== undefined) {
+          element.style.pointerEvents = resolvedConfig.pointerEvents
+        }
+        if (resolvedConfig.userSelect !== undefined) {
+          element.style.userSelect = resolvedConfig.userSelect
+        }
       }
     )
 
-    // Register Transition component
+    // Register transition component handler
     this.componentRegistry.set(
       "transition",
-      (element: HTMLElement, config: TransitionComponent["config"]) => {
-        if (config.transition) element.style.transition = config.transition
-        if (config.transitionProperty)
-          element.style.transitionProperty = config.transitionProperty
-        if (config.transitionDuration)
-          element.style.transitionDuration = config.transitionDuration
-        if (config.transitionTimingFunction)
+      (element, config, assetService) => {
+        const resolvedConfig = this.resolveComponentConfig(config, assetService)
+
+        if (resolvedConfig.transition !== undefined) {
+          element.style.transition = resolvedConfig.transition
+        }
+        if (resolvedConfig.transitionProperty !== undefined) {
+          element.style.transitionProperty = resolvedConfig.transitionProperty
+        }
+        if (resolvedConfig.transitionDuration !== undefined) {
+          element.style.transitionDuration =
+            typeof resolvedConfig.transitionDuration === "number"
+              ? `${resolvedConfig.transitionDuration}ms`
+              : resolvedConfig.transitionDuration
+        }
+        if (resolvedConfig.transitionTimingFunction !== undefined) {
           element.style.transitionTimingFunction =
-            config.transitionTimingFunction
-        if (config.transitionDelay)
-          element.style.transitionDelay = config.transitionDelay
+            resolvedConfig.transitionTimingFunction
+        }
+        if (resolvedConfig.transitionDelay !== undefined) {
+          element.style.transitionDelay =
+            typeof resolvedConfig.transitionDelay === "number"
+              ? `${resolvedConfig.transitionDelay}ms`
+              : resolvedConfig.transitionDelay
+        }
       }
     )
 
-    // Register BoxShadow component
-    this.componentRegistry.set(
-      "boxShadow",
-      (element: HTMLElement, config: BoxShadowComponent["config"]) => {
-        if (config.boxShadow) element.style.boxShadow = config.boxShadow
+    // Register box shadow component handler
+    this.componentRegistry.set("boxShadow", (element, config, assetService) => {
+      const resolvedConfig = this.resolveComponentConfig(config, assetService)
+
+      if (resolvedConfig.boxShadow !== undefined) {
+        element.style.boxShadow = resolvedConfig.boxShadow
       }
-    )
+    })
 
-    // Register Filter component
-    this.componentRegistry.set(
-      "filter",
-      (element: HTMLElement, config: FilterComponent["config"]) => {
-        if (config.filter) element.style.filter = config.filter
-        if (config.backdropFilter)
-          element.style.backdropFilter = config.backdropFilter
+    // Register filter component handler
+    this.componentRegistry.set("filter", (element, config, assetService) => {
+      const resolvedConfig = this.resolveComponentConfig(config, assetService)
+
+      if (resolvedConfig.filter !== undefined) {
+        element.style.filter = resolvedConfig.filter
       }
-    )
-
-    // Register Material component
-    this.componentRegistry.set(
-      "material",
-      (element: HTMLElement, config: MaterialComponent["config"]) => {
-        if (config.color) element.style.color = config.color
-        if (config.backgroundColor)
-          element.style.backgroundColor = config.backgroundColor
-        if (config.opacity !== undefined)
-          element.style.opacity = config.opacity.toString()
+      if (resolvedConfig.backdropFilter !== undefined) {
+        element.style.backdropFilter = resolvedConfig.backdropFilter
       }
-    )
-  }
+    })
 
-  private formatValue(value: string | number): string {
-    if (typeof value === "number") {
-      return `${value}px`
-    }
-    return value
-  }
+    // Register CSS component handler for custom CSS properties
+    this.componentRegistry.set("css", (element, config, assetService) => {
+      const resolvedConfig = this.resolveComponentConfig(config, assetService)
 
-  applyComponents(element: HTMLElement, webObject: WebObject) {
-    if (!webObject.components) return
-
-    webObject.components.forEach(component => {
-      const handler = this.componentRegistry.get(component.type)
-      if (handler) {
-        handler(element, component.config)
-      }
+      // Apply any custom CSS property
+      Object.entries(resolvedConfig).forEach(([property, value]) => {
+        if (value !== undefined && value !== null) {
+          element.style.setProperty(property, value.toString())
+        }
+      })
     })
   }
 
-  computeStyles(components: WebObjectComponent[]): React.CSSProperties {
-    const styles: React.CSSProperties = {}
+  /**
+   * Resolve component configuration by resolving any asset references
+   */
+  private resolveComponentConfig(
+    config: Record<string, any>,
+    assetService?: AssetService
+  ): Record<string, any> {
+    if (!assetService) return config
+
+    const resolvedConfig: Record<string, any> = {}
+
+    Object.entries(config).forEach(([key, value]) => {
+      resolvedConfig[key] = assetService.resolveAssetValue(value)
+    })
+
+    return resolvedConfig
+  }
+
+  computeStyles(
+    components: WebObjectComponent[],
+    assetService?: AssetService
+  ): Record<string, string> {
+    const styles: Record<string, string> = {}
 
     components.forEach(component => {
       const handler = this.componentRegistry.get(component.type)
       if (handler) {
         // Create a temporary element to apply styles
         const tempElement = document.createElement("div")
-        handler(tempElement, component.config)
+        handler(tempElement, component.config, assetService)
 
-        // Copy computed styles to our styles object manually
-        for (let i = 0; i < tempElement.style.length; i++) {
-          const property = tempElement.style[i]
-          const value = tempElement.style.getPropertyValue(property)
-          if (value) {
-            ;(styles as any)[property] = value
+        // Extract computed styles
+        const computedStyles = window.getComputedStyle(tempElement)
+        for (let i = 0; i < computedStyles.length; i++) {
+          const property = computedStyles[i]
+          const value = computedStyles.getPropertyValue(property)
+          if (value && value !== "initial" && value !== "normal") {
+            styles[property] = value
           }
         }
       }
@@ -233,18 +502,23 @@ export class WebObjectComponentService {
     return styles
   }
 
-  registerComponent(
-    type: string,
-    handler: (element: HTMLElement, config: any) => void
+  applyComponents(
+    element: HTMLElement,
+    webObject: WebObject,
+    assetService?: AssetService
   ) {
-    this.componentRegistry.set(type, handler)
+    if (!webObject.components) return
+
+    webObject.components.forEach(component => {
+      const handler = this.componentRegistry.get(component.type)
+      if (handler) {
+        handler(element, component.config, assetService)
+      }
+    })
   }
 
-  getComponentHandler(type: string) {
-    return this.componentRegistry.get(type)
-  }
+  // Helper methods to create components with asset support
 
-  // Helper methods to create components
   createMeshComponent(config: MeshComponent["config"]): MeshComponent {
     return {
       id: `mesh-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
@@ -345,6 +619,14 @@ export class WebObjectComponentService {
     return {
       id: `material-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       type: "material",
+      config,
+    }
+  }
+
+  createCssComponent(config: CssComponent["config"]): CssComponent {
+    return {
+      id: `css-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      type: "css",
       config,
     }
   }

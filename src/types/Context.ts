@@ -1,6 +1,7 @@
 import { WebObject } from "./WebObject"
 import { Manifest } from "./Manifest"
 import { RouterState } from "../services/RouterService"
+import { AssetService } from "../services/AssetService"
 
 export interface WebObjectTree {
   root: WebObject
@@ -14,6 +15,7 @@ export interface WebObjectContext {
   manifest: Manifest
   webObjectTree: WebObjectTree
   routerState: RouterState
+  assetService: AssetService | null
   navigate: (path: string) => void
   goBack: () => void
   goForward: () => void

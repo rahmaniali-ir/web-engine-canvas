@@ -1,5 +1,7 @@
-import React, { useCallback } from "react"
+import React, { useCallback, useRef, useEffect, useMemo } from "react"
 import { LinkWebObject, WebObjectContext } from "../../types"
+import { WebObjectComponentService } from "../../services/WebObjectComponentService"
+import { AssetService } from "../../services/AssetService"
 import WebObjectComponent from "../WebObject"
 
 interface LinkWebObjectProps {
@@ -15,6 +17,11 @@ const LinkWebObjectComponent: React.FC<LinkWebObjectProps> = ({
   onWebObjectReady,
   onWebObjectUpdate,
 }) => {
+  const elementRef = useRef<HTMLAnchorElement>(null)
+  const componentService = useMemo(() => new WebObjectComponentService(), [])
+  const assetService =
+    context?.assetService || useMemo(() => new AssetService(), [])
+
   const handleClick = useCallback(
     (event: React.MouseEvent<HTMLAnchorElement>) => {
       if (webObject.routerLink) {
@@ -36,6 +43,26 @@ const LinkWebObjectComponent: React.FC<LinkWebObjectProps> = ({
     [webObject, context]
   )
 
+  // Apply components to the element
+  const applyComponents = useCallback(() => {
+    if (!elementRef.current || !webObject.components) return
+
+    const element = elementRef.current
+    componentService.applyComponents(element, webObject, assetService)
+  }, [webObject.components, componentService, assetService])
+
+  // Apply components when they change
+  useEffect(() => {
+    applyComponents()
+  }, [applyComponents])
+
+  // Notify when element is ready
+  useEffect(() => {
+    if (elementRef.current && onWebObjectReady) {
+      onWebObjectReady(elementRef.current, webObject)
+    }
+  }, [webObject, onWebObjectReady])
+
   const handleWebObjectReady = useCallback(
     (element: HTMLElement) => {
       if (onWebObjectReady) {
@@ -56,6 +83,7 @@ const LinkWebObjectComponent: React.FC<LinkWebObjectProps> = ({
 
   return (
     <a
+      ref={elementRef}
       href={webObject.href || webObject.routerLink || "#"}
       target={webObject.target}
       onClick={handleClick}
@@ -66,6 +94,7 @@ const LinkWebObjectComponent: React.FC<LinkWebObjectProps> = ({
         <WebObjectComponent
           key={child.id}
           webObject={child}
+          context={context}
           onWebObjectReady={handleWebObjectReady}
           onWebObjectUpdate={handleWebObjectUpdate}
         />

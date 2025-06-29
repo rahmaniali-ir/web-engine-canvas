@@ -7,6 +7,7 @@ export interface BaseWebObject {
   components?: WebObjectComponent[]
   children?: WebObject[]
   content?: string
+  metadata?: Record<string, any>
 }
 
 export interface DivWebObject extends BaseWebObject {
