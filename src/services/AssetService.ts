@@ -393,9 +393,8 @@ export class AssetService {
       type: "resource",
       resourceType,
       path: creationOptions.path || "resources",
-      description: creationOptions.metadata?.description,
+      description: creationOptions.description,
       tags: creationOptions.tags || [],
-      metadata: creationOptions.metadata,
       createdAt: new Date(),
       updatedAt: new Date(),
       ...options,
@@ -425,9 +424,8 @@ export class AssetService {
       type: "prefab",
       template,
       path: creationOptions.path || "prefabs",
-      description: creationOptions.metadata?.description,
+      description: creationOptions.description,
       tags: creationOptions.tags || [],
-      metadata: creationOptions.metadata,
       createdAt: new Date(),
       updatedAt: new Date(),
       parameters: options.parameters || [],
@@ -460,9 +458,8 @@ export class AssetService {
       componentType,
       config,
       path: creationOptions.path || "components",
-      description: creationOptions.metadata?.description,
+      description: creationOptions.description,
       tags: creationOptions.tags || [],
-      metadata: creationOptions.metadata,
       createdAt: new Date(),
       updatedAt: new Date(),
       schema: options.schema,
@@ -493,9 +490,8 @@ export class AssetService {
       paletteType,
       values,
       path: creationOptions.path || "styles",
-      description: creationOptions.metadata?.description,
+      description: creationOptions.description,
       tags: creationOptions.tags || [],
-      metadata: creationOptions.metadata,
       createdAt: new Date(),
       updatedAt: new Date(),
       theme: options.theme,
@@ -605,8 +601,12 @@ export class AssetService {
         webObject.content = value
       } else if (key === "id") {
         webObject.id = value
-      } else if (webObject.metadata) {
-        webObject.metadata[key] = value
+      } else {
+        // Store in prefabParameters if it exists, otherwise create it
+        if (!webObject.prefabParameters) {
+          webObject.prefabParameters = {}
+        }
+        webObject.prefabParameters[key] = value
       }
 
       // Apply to children recursively

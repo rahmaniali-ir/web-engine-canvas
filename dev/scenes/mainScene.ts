@@ -29,9 +29,7 @@ const mainScene: Scene = {
       {
         id: "navbar",
         type: "div",
-        metadata: {
-          prefabId: "navbar",
-        },
+        prefabId: "navbar",
       },
       {
         id: "hero-section",

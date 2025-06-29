@@ -7,7 +7,9 @@ export interface BaseWebObject {
   components?: WebObjectComponent[]
   children?: WebObject[]
   content?: string
-  metadata?: Record<string, any>
+  // Prefab support
+  prefabId?: string
+  prefabParameters?: Record<string, any>
 }
 
 export interface DivWebObject extends BaseWebObject {

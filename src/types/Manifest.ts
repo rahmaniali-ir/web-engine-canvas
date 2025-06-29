@@ -7,7 +7,6 @@ export interface Scene {
   name: string
   path: string
   root: WebObject
-  metadata?: Record<string, any>
 }
 
 export interface Route {
@@ -35,5 +34,4 @@ export interface Manifest {
     responsive?: boolean
     assetPaths?: string[] // Additional asset search paths
   }
-  metadata?: Record<string, any>
 }

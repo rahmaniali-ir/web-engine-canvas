@@ -29,9 +29,7 @@ const contactScene: Scene = {
       {
         id: "navbar",
         type: "div",
-        metadata: {
-          prefabId: "navbar",
-        },
+        prefabId: "navbar",
       },
       {
         id: "contact-header-section",

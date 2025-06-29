@@ -29,9 +29,7 @@ const docsScene: Scene = {
       {
         id: "navbar",
         type: "div",
-        metadata: {
-          prefabId: "navbar",
-        },
+        prefabId: "navbar",
       },
       {
         id: "docs-header-section",

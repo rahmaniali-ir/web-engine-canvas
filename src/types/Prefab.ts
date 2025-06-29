@@ -25,9 +25,6 @@ export interface Prefab {
   // Parameters that can be overridden during instantiation
   parameters?: PrefabParameter[]
 
-  // Metadata for the prefab
-  metadata?: Record<string, any>
-
   // Creation timestamp
   createdAt: Date
   updatedAt: Date
@@ -57,7 +54,6 @@ export interface PrefabManifest {
   template: WebObject
   defaultValues?: Record<string, any>
   parameters?: PrefabParameter[]
-  metadata?: Record<string, any>
   createdAt: string
   updatedAt: string
 }
@@ -81,7 +77,6 @@ export interface PrefabInstantiationOptions {
   rotation?: { x: number; y: number; z?: number }
   customId?: string
   overrideComponents?: WebObjectComponent[]
-  metadata?: Record<string, any>
 }
 
 /**

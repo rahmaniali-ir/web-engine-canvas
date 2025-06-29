@@ -12,7 +12,6 @@ export interface BaseAsset {
   path: string // Folder structure path for asset management
   description?: string
   tags?: string[]
-  metadata?: Record<string, any>
   createdAt: Date
   updatedAt: Date
 }
@@ -246,7 +245,6 @@ export interface AssetManifest {
   version: string
   description?: string
   assets: Asset[]
-  metadata?: Record<string, any>
   createdAt: string
   updatedAt: string
 }
@@ -270,8 +268,8 @@ export interface AssetSearchOptions {
 export interface AssetCreationOptions {
   id?: string
   path?: string
+  description?: string
   tags?: string[]
-  metadata?: Record<string, any>
   overwrite?: boolean
 }
 

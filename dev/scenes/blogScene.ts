@@ -29,9 +29,7 @@ const blogScene: Scene = {
       {
         id: "navbar",
         type: "div",
-        metadata: {
-          prefabId: "navbar",
-        },
+        prefabId: "navbar",
       },
       {
         id: "blog-header-section",

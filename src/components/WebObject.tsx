@@ -63,8 +63,8 @@ const WebObjectComponent: React.FC<WebObjectProps> = ({
   }
 
   // Check if this WebObject is a prefab instance
-  const prefabId = webObject.metadata?.prefabId || webObject.metadata?.prefab
-  const prefabParameters = webObject.metadata?.parameters
+  const prefabId = webObject.prefabId
+  const prefabParameters = webObject.prefabParameters
 
   // Instantiate prefab if needed
   const instantiatedWebObject = useMemo(() => {
@@ -88,11 +88,12 @@ const WebObjectComponent: React.FC<WebObjectProps> = ({
             applyParametersToWebObject(instance, prefabParameters)
           }
 
-          // Merge with original WebObject properties (like id, metadata, etc.)
+          // Merge with original WebObject properties (like id, prefabId, prefabParameters, etc.)
           return {
             ...instance,
             id: webObject.id,
-            metadata: webObject.metadata,
+            prefabId: webObject.prefabId,
+            prefabParameters: webObject.prefabParameters,
           }
         }
       }
@@ -126,11 +127,12 @@ const WebObjectComponent: React.FC<WebObjectProps> = ({
         applyParametersToWebObject(instance, prefabParameters)
       }
 
-      // Merge with original WebObject properties (like id, metadata, etc.)
+      // Merge with original WebObject properties (like id, prefabId, prefabParameters, etc.)
       return {
         ...instance,
         id: webObject.id,
-        metadata: webObject.metadata,
+        prefabId: webObject.prefabId,
+        prefabParameters: webObject.prefabParameters,
       }
     } catch (error) {
       console.error(`Error instantiating prefab ${prefabId}:`, error)

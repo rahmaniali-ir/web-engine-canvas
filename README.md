@@ -113,6 +113,13 @@ const manifest: Manifest = {
     types: new Map(),
     tags: new Map(),
   },
+  settings: {
+    width: 1200,
+    height: 800,
+    backgroundColor: "#ffffff",
+    responsive: true,
+    assetPaths: ["assets/", "public/assets/"],
+  },
 }
 
 function App() {
@@ -301,7 +308,7 @@ const manifest: Manifest = {
 
 ## WebObjects
 
-WebObjects are the building blocks of your application. They represent HTML elements with additional metadata and components.
+WebObjects are the building blocks of your application. They represent HTML elements with components and can be instantiated from prefabs.
 
 ### WebObject Types
 
@@ -449,13 +456,6 @@ const manifest: Manifest = {
     backgroundColor: "#ffffff",
     responsive: true,
     assetPaths: ["assets/", "public/assets/"],
-  },
-
-  // Optional metadata
-  metadata: {
-    author: "Developer",
-    category: "web-app",
-    tags: ["react", "canvas"],
   },
 }
 ```

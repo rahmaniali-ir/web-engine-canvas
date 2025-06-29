@@ -179,12 +179,6 @@ export class PrefabService {
         instance.components = options.overrideComponents
       }
 
-      // Add metadata
-      if (options.metadata) {
-        if (!instance.metadata) instance.metadata = {}
-        Object.assign(instance.metadata, options.metadata)
-      }
-
       // Track instance
       const prefabInstance: PrefabInstance = {
         id: instanceId,
@@ -283,7 +277,6 @@ export class PrefabService {
       template: prefab.template,
       defaultValues: prefab.defaultValues,
       parameters: prefab.parameters,
-      metadata: prefab.metadata,
       createdAt: prefab.createdAt.toISOString(),
       updatedAt: prefab.updatedAt.toISOString(),
     }
@@ -303,7 +296,6 @@ export class PrefabService {
       template: manifest.template,
       defaultValues: manifest.defaultValues,
       parameters: manifest.parameters,
-      metadata: manifest.metadata,
       createdAt: new Date(manifest.createdAt),
       updatedAt: new Date(manifest.updatedAt),
     }
@@ -407,8 +399,12 @@ export class PrefabService {
       webObject.content = value
     } else if (paramName === "id") {
       webObject.id = value
-    } else if (webObject.metadata) {
-      webObject.metadata[paramName] = value
+    } else {
+      // Store in prefabParameters if it exists, otherwise create it
+      if (!webObject.prefabParameters) {
+        webObject.prefabParameters = {}
+      }
+      webObject.prefabParameters[paramName] = value
     }
 
     // Apply to children recursively
