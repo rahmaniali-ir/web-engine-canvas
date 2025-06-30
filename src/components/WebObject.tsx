@@ -47,7 +47,53 @@ const WebObjectComponent: React.FC<WebObjectProps> = React.memo(
 
     // Check if this WebObject is a prefab instance
     const prefabId = webObject.prefabId
+    const prefabVariantId = webObject.prefabVariantId
     const prefabParameters = webObject.prefabParameters
+
+    // Helper function to get the correct prefab variant
+    const getPrefabVariant = useCallback((prefab: any, variantId?: string) => {
+      // If no variants exist, return the main template
+      if (!prefab.variants || prefab.variants.length === 0) {
+        return {
+          template: prefab.template,
+          defaultValues: prefab.defaultValues,
+          parameters: prefab.parameters,
+        }
+      }
+
+      // If variantId is specified, try to find it
+      if (variantId) {
+        const variant = prefab.variants.find((v: any) => v.id === variantId)
+        if (variant) {
+          return {
+            template: variant.template,
+            defaultValues: variant.defaultValues,
+            parameters: variant.parameters,
+          }
+        }
+      }
+
+      // Try to find default variant
+      const defaultVariant =
+        prefab.variants.find((v: any) => v.isDefault) ||
+        prefab.variants.find((v: any) => v.id === prefab.defaultVariantId) ||
+        prefab.variants[0]
+
+      if (defaultVariant) {
+        return {
+          template: defaultVariant.template,
+          defaultValues: defaultVariant.defaultValues,
+          parameters: defaultVariant.parameters,
+        }
+      }
+
+      // Fallback to main template
+      return {
+        template: prefab.template,
+        defaultValues: prefab.defaultValues,
+        parameters: prefab.parameters,
+      }
+    }, [])
 
     // Instantiate prefab if needed
     const instantiatedWebObject = useMemo(() => {
@@ -56,6 +102,8 @@ const WebObjectComponent: React.FC<WebObjectProps> = React.memo(
       console.log(
         "WebObject: Instantiating prefab",
         prefabId,
+        "variant:",
+        prefabVariantId || "default",
         "for",
         webObject.id
       )
@@ -68,15 +116,19 @@ const WebObjectComponent: React.FC<WebObjectProps> = React.memo(
             console.log(
               "WebObject: Found prefab",
               prefabId,
-              "with components:",
-              prefab.template.components?.length || 0
+              "with variants:",
+              prefab.variants?.length || 0
             )
+
+            // Get the correct variant
+            const variant = getPrefabVariant(prefab, prefabVariantId)
+
             // Deep clone the template
-            const instance = JSON.parse(JSON.stringify(prefab.template))
+            const instance = JSON.parse(JSON.stringify(variant.template))
 
             // Apply default values
-            if (prefab.defaultValues) {
-              applyParametersToWebObject(instance, prefab.defaultValues)
+            if (variant.defaultValues) {
+              applyParametersToWebObject(instance, variant.defaultValues)
             }
 
             // Apply provided parameters
@@ -90,6 +142,7 @@ const WebObjectComponent: React.FC<WebObjectProps> = React.memo(
               ...instance,
               id: webObject.id,
               prefabId: webObject.prefabId,
+              prefabVariantId: webObject.prefabVariantId,
               prefabParameters: webObject.prefabParameters,
               // Merge components: prefab components first, then scene components
               components: [
@@ -127,12 +180,15 @@ const WebObjectComponent: React.FC<WebObjectProps> = React.memo(
           return webObject
         }
 
+        // Get the correct variant for legacy prefabs
+        const variant = getPrefabVariant(prefabAsset, prefabVariantId)
+
         // Deep clone the template
-        const instance = JSON.parse(JSON.stringify(prefabAsset.template))
+        const instance = JSON.parse(JSON.stringify(variant.template))
 
         // Apply default values
-        if (prefabAsset.defaultValues) {
-          applyParametersToWebObject(instance, prefabAsset.defaultValues)
+        if (variant.defaultValues) {
+          applyParametersToWebObject(instance, variant.defaultValues)
         }
 
         // Apply provided parameters
@@ -146,6 +202,7 @@ const WebObjectComponent: React.FC<WebObjectProps> = React.memo(
           ...instance,
           id: webObject.id,
           prefabId: webObject.prefabId,
+          prefabVariantId: webObject.prefabVariantId,
           prefabParameters: webObject.prefabParameters,
           // Merge components: prefab components first, then scene components
           components: [
@@ -157,7 +214,14 @@ const WebObjectComponent: React.FC<WebObjectProps> = React.memo(
         console.error(`Error instantiating prefab ${prefabId}:`, error)
         return webObject
       }
-    }, [prefabId, prefabParameters, webObject, context?.manifest])
+    }, [
+      prefabId,
+      prefabVariantId,
+      prefabParameters,
+      webObject,
+      context?.manifest,
+      getPrefabVariant,
+    ])
 
     // Generate initial styles synchronously during render
     const getInitialStyles = useCallback(() => {

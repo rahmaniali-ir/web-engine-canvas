@@ -522,164 +522,307 @@ const blogScene: Scene = {
               {
                 id: "blog-post-3",
                 type: "div",
+                prefabId: "blog-post",
+                prefabVariantId: "compact",
+                prefabParameters: {
+                  title: "Performance Optimization Tips",
+                  excerpt:
+                    "Discover techniques to optimize your WebEngine Canvas applications for better performance and user experience. From lazy loading to code splitting.",
+                  category: "Performance",
+                  date: "December 5, 2024",
+                  author: "Mike Chen",
+                  imageUrl:
+                    "https://images.unsplash.com/photo-1555066931-4365d14bab8c?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80",
+                },
+              },
+            ],
+          },
+        ],
+      },
+      {
+        id: "blog-variants-demo-section",
+        type: "div",
+        components: [
+          {
+            id: "blog-variants-demo-mesh",
+            type: "mesh",
+            config: {
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              gap: "2rem",
+            },
+          },
+          {
+            id: "blog-variants-demo-padding",
+            type: "padding",
+            config: {
+              padding: "6rem 2rem 6rem 2rem",
+            },
+          },
+          {
+            id: "blog-variants-demo-material",
+            type: "material",
+            config: {
+              backgroundColor: "white",
+            },
+          },
+        ],
+        children: [
+          {
+            id: "blog-variants-demo-title",
+            type: "heading",
+            level: 2,
+            content: "Blog Post Variants Demo",
+            components: [
+              {
+                id: "blog-variants-demo-title-typography",
+                type: "typography",
+                config: {
+                  fontSize: "2.5rem",
+                  fontWeight: "bold",
+                  marginBottom: "1rem",
+                  color: "gray-800",
+                  textAlign: "center",
+                },
+              },
+            ],
+          },
+          {
+            id: "blog-variants-demo-subtitle",
+            type: "paragraph",
+            content:
+              "See how the same blog post content can be displayed in different layouts using prefab variants",
+            components: [
+              {
+                id: "blog-variants-demo-subtitle-typography",
+                type: "typography",
+                config: {
+                  fontSize: "1.125rem",
+                  color: "gray-600",
+                  marginBottom: "4rem",
+                  textAlign: "center",
+                  maxWidth: "600px",
+                },
+              },
+            ],
+          },
+          {
+            id: "blog-variants-container",
+            type: "div",
+            components: [
+              {
+                id: "blog-variants-container-mesh",
+                type: "mesh",
+                config: {
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "3rem",
+                  width: "100%",
+                  maxWidth: "1200px",
+                },
+              },
+            ],
+            children: [
+              {
+                id: "featured-variant-demo",
+                type: "div",
                 components: [
                   {
-                    id: "blog-post-3-mesh",
+                    id: "featured-variant-demo-mesh",
                     type: "mesh",
                     config: {
                       display: "flex",
                       flexDirection: "column",
-                    },
-                  },
-                  {
-                    id: "blog-post-3-material",
-                    type: "material",
-                    config: {
-                      backgroundColor: "white",
-                    },
-                  },
-                  {
-                    id: "blog-post-3-borderRadius",
-                    type: "borderRadius",
-                    config: {
-                      borderRadius: "1rem",
-                    },
-                  },
-                  {
-                    id: "blog-post-3-shadow",
-                    type: "boxShadow",
-                    config: {
-                      boxShadow: "0 4px 20px rgba(0,0,0,0.08)",
-                    },
-                  },
-                  {
-                    id: "blog-post-3-overflow",
-                    type: "css",
-                    config: {
-                      overflow: "hidden",
+                      gap: "1rem",
                     },
                   },
                 ],
                 children: [
                   {
-                    id: "blog-post-3-image",
-                    type: "div",
+                    id: "featured-variant-label",
+                    type: "heading",
+                    level: 3,
+                    content: "Featured Variant",
                     components: [
                       {
-                        id: "blog-post-3-image-mesh",
-                        type: "mesh",
+                        id: "featured-variant-label-typography",
+                        type: "typography",
                         config: {
-                          height: "200px",
-                          width: "100%",
-                        },
-                      },
-                      {
-                        id: "blog-post-3-image-material",
-                        type: "material",
-                        config: {
-                          background: "primary-gradient",
+                          fontSize: "1.5rem",
+                          fontWeight: "600",
+                          color: "gray-700",
+                          marginBottom: "1rem",
                         },
                       },
                     ],
                   },
                   {
-                    id: "blog-post-3-content",
+                    id: "featured-blog-post",
                     type: "div",
+                    prefabId: "blog-post",
+                    prefabVariantId: "featured",
+                    prefabParameters: {
+                      title: "WebEngine Canvas: A New Era of Web Development",
+                      excerpt:
+                        "Discover how component-based architecture is changing the web development landscape. Learn about the latest features, best practices, and real-world applications that make WebEngine Canvas the go-to solution for modern web applications.",
+                      category: "Technology",
+                      date: "March 15, 2024",
+                      author: "Sarah Johnson",
+                      imageUrl:
+                        "https://images.unsplash.com/photo-1499750310107-5fef28a66643?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
+                    },
+                  },
+                ],
+              },
+              {
+                id: "compact-variant-demo",
+                type: "div",
+                components: [
+                  {
+                    id: "compact-variant-demo-mesh",
+                    type: "mesh",
+                    config: {
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: "1rem",
+                    },
+                  },
+                ],
+                children: [
+                  {
+                    id: "compact-variant-label",
+                    type: "heading",
+                    level: 3,
+                    content: "Compact Variant",
                     components: [
                       {
-                        id: "blog-post-3-content-padding",
-                        type: "padding",
+                        id: "compact-variant-label-typography",
+                        type: "typography",
                         config: {
-                          padding: "2rem",
-                        },
-                      },
-                      {
-                        id: "blog-post-3-content-mesh",
-                        type: "mesh",
-                        config: {
-                          display: "flex",
-                          flexDirection: "column",
-                          gap: "1rem",
+                          fontSize: "1.5rem",
+                          fontWeight: "600",
+                          color: "gray-700",
+                          marginBottom: "1rem",
                         },
                       },
                     ],
-                    children: [
+                  },
+                  {
+                    id: "compact-blog-post",
+                    type: "div",
+                    prefabId: "blog-post",
+                    prefabVariantId: "compact",
+                    prefabParameters: {
+                      title: "WebEngine Canvas: A New Era of Web Development",
+                      excerpt:
+                        "Discover how component-based architecture is changing the web development landscape. Learn about the latest features, best practices, and real-world applications.",
+                      category: "Technology",
+                      date: "March 15, 2024",
+                      author: "Sarah Johnson",
+                      imageUrl:
+                        "https://images.unsplash.com/photo-1499750310107-5fef28a66643?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80",
+                    },
+                  },
+                ],
+              },
+              {
+                id: "minimal-variant-demo",
+                type: "div",
+                components: [
+                  {
+                    id: "minimal-variant-demo-mesh",
+                    type: "mesh",
+                    config: {
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: "1rem",
+                    },
+                  },
+                ],
+                children: [
+                  {
+                    id: "minimal-variant-label",
+                    type: "heading",
+                    level: 3,
+                    content: "Minimal Variant",
+                    components: [
                       {
-                        id: "blog-post-3-date",
-                        type: "paragraph",
-                        content: "December 5, 2024",
-                        components: [
-                          {
-                            id: "blog-post-3-date-typography",
-                            type: "typography",
-                            config: {
-                              fontSize: "0.875rem",
-                              color: "gray-500",
-                              marginBottom: "0.5rem",
-                            },
-                          },
-                        ],
-                      },
-                      {
-                        id: "blog-post-3-title",
-                        type: "heading",
-                        level: 3,
-                        content: "Performance Optimization Tips",
-                        components: [
-                          {
-                            id: "blog-post-3-title-typography",
-                            type: "typography",
-                            config: {
-                              fontSize: "1.5rem",
-                              fontWeight: "bold",
-                              marginBottom: "1rem",
-                              color: "gray-800",
-                            },
-                          },
-                        ],
-                      },
-                      {
-                        id: "blog-post-3-excerpt",
-                        type: "paragraph",
-                        content:
-                          "Discover techniques to optimize your WebEngine Canvas applications for better performance and user experience. From lazy loading to code splitting.",
-                        components: [
-                          {
-                            id: "blog-post-3-excerpt-typography",
-                            type: "typography",
-                            config: {
-                              color: "gray-600",
-                              fontSize: "1rem",
-                              lineHeight: "1.6",
-                              marginBottom: "1.5rem",
-                            },
-                          },
-                        ],
-                      },
-                      {
-                        id: "blog-post-3-link",
-                        type: "link",
-                        content: "Read More →",
-                        href: "#post-3",
-                        components: [
-                          {
-                            id: "blog-post-3-link-typography",
-                            type: "typography",
-                            config: {
-                              color: "primary",
-                              fontWeight: "600",
-                            },
-                          },
-                          {
-                            id: "blog-post-3-link-interaction",
-                            type: "interaction",
-                            config: {
-                              cursor: "pointer",
-                            },
-                          },
-                        ],
+                        id: "minimal-variant-label-typography",
+                        type: "typography",
+                        config: {
+                          fontSize: "1.5rem",
+                          fontWeight: "600",
+                          color: "gray-700",
+                          marginBottom: "1rem",
+                        },
                       },
                     ],
+                  },
+                  {
+                    id: "minimal-blog-post",
+                    type: "div",
+                    prefabId: "blog-post",
+                    prefabVariantId: "minimal",
+                    prefabParameters: {
+                      title: "WebEngine Canvas: A New Era of Web Development",
+                      excerpt:
+                        "Discover how component-based architecture is changing the web development landscape. Learn about the latest features, best practices, and real-world applications that make WebEngine Canvas the go-to solution for modern web applications.",
+                      category: "Technology",
+                      date: "March 15, 2024",
+                      author: "Sarah Johnson",
+                    },
+                  },
+                ],
+              },
+              {
+                id: "card-variant-demo",
+                type: "div",
+                components: [
+                  {
+                    id: "card-variant-demo-mesh",
+                    type: "mesh",
+                    config: {
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: "1rem",
+                    },
+                  },
+                ],
+                children: [
+                  {
+                    id: "card-variant-label",
+                    type: "heading",
+                    level: 3,
+                    content: "Card Variant",
+                    components: [
+                      {
+                        id: "card-variant-label-typography",
+                        type: "typography",
+                        config: {
+                          fontSize: "1.5rem",
+                          fontWeight: "600",
+                          color: "gray-700",
+                          marginBottom: "1rem",
+                        },
+                      },
+                    ],
+                  },
+                  {
+                    id: "card-blog-post",
+                    type: "div",
+                    prefabId: "blog-post",
+                    prefabVariantId: "card",
+                    prefabParameters: {
+                      title: "WebEngine Canvas: A New Era of Web Development",
+                      excerpt:
+                        "Discover how component-based architecture is changing the web development landscape. Learn about the latest features, best practices, and real-world applications.",
+                      category: "Technology",
+                      date: "March 15, 2024",
+                      author: "Sarah Johnson",
+                      imageUrl:
+                        "https://images.unsplash.com/photo-1499750310107-5fef28a66643?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80",
+                    },
                   },
                 ],
               },

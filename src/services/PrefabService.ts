@@ -5,10 +5,13 @@ import {
   PrefabRegistry,
   PrefabInstantiationOptions,
   PrefabSearchOptions,
+  PrefabVariant,
+  PrefabVariantOptions,
 } from "../types/Prefab"
 import { WebObject } from "../types/WebObject"
 import { WebObjectComponent } from "../types/WebObjectComponent"
 import { PrefabParameter } from "../types/Asset"
+import { Manifest } from "../types/Manifest"
 
 /**
  * PrefabService - Manages prefab registration, instantiation, and lifecycle
@@ -17,13 +20,15 @@ import { PrefabParameter } from "../types/Asset"
 export class PrefabService {
   private prefabRegistry: PrefabRegistry
   private instances: Map<string, PrefabInstance>
+  private manifest: Manifest
 
-  constructor() {
+  constructor(manifest: Manifest) {
     this.prefabRegistry = {
       prefabs: new Map(),
       categories: new Map(),
     }
     this.instances = new Map()
+    this.manifest = manifest
   }
 
   /**
@@ -141,60 +146,106 @@ export class PrefabService {
   }
 
   /**
-   * Instantiate a prefab
+   * Get a specific variant of a prefab
+   */
+  getPrefabVariant(prefabId: string, variantId?: string): PrefabVariant | null {
+    const prefab = this.getPrefab(prefabId)
+    if (!prefab) return null
+
+    // If no variants exist, return null (use main template)
+    if (!prefab.variants || prefab.variants.length === 0) {
+      return null
+    }
+
+    // If variantId is specified, try to find it
+    if (variantId) {
+      const variant = prefab.variants.find(v => v.id === variantId)
+      if (variant) return variant
+    }
+
+    // Try to find default variant
+    const defaultVariant =
+      prefab.variants.find(v => v.isDefault) ||
+      prefab.variants.find(v => v.id === prefab.defaultVariantId) ||
+      prefab.variants[0]
+
+    return defaultVariant || null
+  }
+
+  /**
+   * Get all variants of a prefab
+   */
+  getPrefabVariants(prefabId: string): PrefabVariant[] {
+    const prefab = this.getPrefab(prefabId)
+    return prefab?.variants || []
+  }
+
+  /**
+   * Get the default variant of a prefab
+   */
+  getDefaultVariant(prefabId: string): PrefabVariant | null {
+    const prefab = this.getPrefab(prefabId)
+    if (!prefab) return null
+
+    if (!prefab.variants || prefab.variants.length === 0) {
+      return null
+    }
+
+    return (
+      prefab.variants.find(v => v.isDefault) ||
+      prefab.variants.find(v => v.id === prefab.defaultVariantId) ||
+      prefab.variants[0] ||
+      null
+    )
+  }
+
+  /**
+   * Instantiate a prefab with variant support
    */
   instantiatePrefab(
     prefabId: string,
     options: PrefabInstantiationOptions = {}
   ): WebObject | null {
     const prefab = this.getPrefab(prefabId)
-    if (!prefab) {
-      console.error(`Prefab with ID "${prefabId}" not found`)
-      return null
+    if (!prefab) return null
+
+    const { variantId, parameters = {}, customId } = options
+
+    // Get the correct variant
+    const variant = this.getPrefabVariant(prefabId, variantId)
+
+    // Use variant template if available, otherwise use main template
+    const template = variant?.template || prefab.template
+
+    // Deep clone the template
+    const instance = JSON.parse(JSON.stringify(template))
+
+    // Apply default values (variant first, then main prefab)
+    if (variant?.defaultValues) {
+      this.applyParametersToWebObject(instance, variant.defaultValues)
+    }
+    if (prefab.defaultValues) {
+      this.applyParametersToWebObject(instance, prefab.defaultValues)
     }
 
-    try {
-      // Deep clone the template
-      const instance = this.deepCloneWebObject(prefab.template)
-
-      // Generate unique ID
-      const instanceId = options.customId || this.generateUniqueId(instance.id)
-      instance.id = instanceId
-
-      // Apply parameters
-      if (options.parameters) {
-        this.applyParameters(instance, prefab, options.parameters)
-      }
-
-      // Apply default values
-      if (prefab.defaultValues) {
-        this.applyDefaultValues(instance, prefab.defaultValues)
-      }
-
-      // Apply position, scale, rotation
-      this.applyTransform(instance, options)
-
-      // Override components if specified
-      if (options.overrideComponents) {
-        instance.components = options.overrideComponents
-      }
-
-      // Track instance
-      const prefabInstance: PrefabInstance = {
-        id: instanceId,
-        prefabId,
-        instance,
-        parameters: options.parameters || {},
-        createdAt: new Date(),
-      }
-      this.instances.set(instanceId, prefabInstance)
-
-      console.log(`Prefab "${prefab.name}" instantiated with ID: ${instanceId}`)
-      return instance
-    } catch (error) {
-      console.error(`Failed to instantiate prefab "${prefab.name}":`, error)
-      return null
+    // Apply provided parameters
+    if (parameters) {
+      this.applyParametersToWebObject(instance, parameters)
     }
+
+    // Set prefab metadata
+    instance.prefabId = prefabId
+    if (variant) {
+      instance.prefabVariantId = variant.id
+    }
+    instance.prefabParameters = parameters
+
+    // Set custom ID if provided
+    if (customId) {
+      instance.id = customId
+    }
+
+    return instance
   }
 
   /**
@@ -321,6 +372,143 @@ export class PrefabService {
       .filter(Boolean) as Prefab[]
   }
 
+  /**
+   * Create a new variant for a prefab
+   */
+  createVariant(
+    prefabId: string,
+    variant: Omit<PrefabVariant, "id">
+  ): PrefabVariant | null {
+    const prefab = this.getPrefab(prefabId)
+    if (!prefab) return null
+
+    const newVariant: PrefabVariant = {
+      ...variant,
+      id: this.generateVariantId(prefabId, variant.name),
+    }
+
+    // Add to prefab variants
+    if (!prefab.variants) {
+      prefab.variants = []
+    }
+    prefab.variants.push(newVariant)
+
+    return newVariant
+  }
+
+  /**
+   * Update an existing variant
+   */
+  updateVariant(
+    prefabId: string,
+    variantId: string,
+    updates: Partial<PrefabVariant>
+  ): boolean {
+    const prefab = this.getPrefab(prefabId)
+    if (!prefab?.variants) return false
+
+    const variantIndex = prefab.variants.findIndex(v => v.id === variantId)
+    if (variantIndex === -1) return false
+
+    prefab.variants[variantIndex] = {
+      ...prefab.variants[variantIndex],
+      ...updates,
+    }
+
+    return true
+  }
+
+  /**
+   * Delete a variant
+   */
+  deleteVariant(prefabId: string, variantId: string): boolean {
+    const prefab = this.getPrefab(prefabId)
+    if (!prefab?.variants) return false
+
+    const variantIndex = prefab.variants.findIndex(v => v.id === variantId)
+    if (variantIndex === -1) return false
+
+    prefab.variants.splice(variantIndex, 1)
+    return true
+  }
+
+  /**
+   * Set a variant as default
+   */
+  setDefaultVariant(prefabId: string, variantId: string): boolean {
+    const prefab = this.getPrefab(prefabId)
+    if (!prefab?.variants) return false
+
+    // Check if variant exists
+    const variant = prefab.variants.find(v => v.id === variantId)
+    if (!variant) return false
+
+    // Clear existing default flags
+    prefab.variants.forEach(v => (v.isDefault = false))
+
+    // Set new default
+    variant.isDefault = true
+    prefab.defaultVariantId = variantId
+
+    return true
+  }
+
+  /**
+   * Search prefabs by variant properties
+   */
+  searchPrefabsByVariant(options: {
+    query?: string
+    tags?: string[]
+    category?: string
+    variantTags?: string[]
+    variantCategory?: string
+  }): Prefab[] {
+    const { query, tags, category, variantTags, variantCategory } = options
+
+    return (
+      this.manifest.prefabs?.filter(prefab => {
+        // Filter by main prefab properties
+        if (
+          query &&
+          !prefab.name.toLowerCase().includes(query.toLowerCase()) &&
+          !prefab.description?.toLowerCase().includes(query.toLowerCase())
+        ) {
+          return false
+        }
+
+        if (tags && !tags.some(tag => prefab.tags?.includes(tag))) {
+          return false
+        }
+
+        if (category && prefab.tags?.includes(category)) {
+          return false
+        }
+
+        // Filter by variant properties
+        if (variantTags || variantCategory) {
+          const hasMatchingVariant = prefab.variants?.some(variant => {
+            if (
+              variantTags &&
+              !variantTags.some(tag => variant.tags?.includes(tag))
+            ) {
+              return false
+            }
+            if (variantCategory && variant.category !== variantCategory) {
+              return false
+            }
+            return true
+          })
+
+          if (!hasMatchingVariant) {
+            return false
+          }
+        }
+
+        return true
+      }) || []
+    )
+  }
+
   // Private helper methods
 
   private validatePrefab(prefab: Prefab): void {
@@ -361,94 +549,35 @@ export class PrefabService {
     return `${baseId}-${timestamp}-${random}`
   }
 
-  private applyParameters(
-    instance: WebObject,
-    prefab: Prefab,
+  private applyParametersToWebObject(
+    webObj: WebObject,
     parameters: Record<string, any>
   ): void {
-    if (!prefab.parameters) return
-
-    prefab.parameters.forEach(param => {
-      if (parameters.hasOwnProperty(param.name)) {
-        const value = parameters[param.name]
-
-        // Validate parameter
-        if (param.validation) {
-          const validationResult = param.validation(value)
-          if (validationResult !== true) {
-            console.warn(
-              `Parameter validation failed for "${param.name}": ${validationResult}`
-            )
-            return
-          }
+    Object.entries(parameters).forEach(([key, value]) => {
+      if (key === "content") {
+        webObj.content = value
+      } else if (key === "id") {
+        webObj.id = value
+      } else {
+        // Store in prefabParameters if it exists, otherwise create it
+        if (!webObj.prefabParameters) {
+          webObj.prefabParameters = {}
         }
-
-        // Apply parameter to template
-        this.applyParameterToWebObject(instance, param.name, value)
+        webObj.prefabParameters[key] = value
       }
     })
-  }
-
-  private applyParameterToWebObject(
-    webObject: WebObject,
-    paramName: string,
-    value: any
-  ): void {
-    // Apply to current object
-    if (paramName === "content") {
-      webObject.content = value
-    } else if (paramName === "id") {
-      webObject.id = value
-    } else {
-      // Store in prefabParameters if it exists, otherwise create it
-      if (!webObject.prefabParameters) {
-        webObject.prefabParameters = {}
-      }
-      webObject.prefabParameters[paramName] = value
-    }
 
     // Apply to children recursively
-    if (webObject.children) {
-      webObject.children.forEach(child =>
-        this.applyParameterToWebObject(child, paramName, value)
+    if (webObj.children) {
+      webObj.children.forEach(child =>
+        this.applyParametersToWebObject(child, parameters)
       )
     }
   }
 
-  private applyDefaultValues(
-    instance: WebObject,
-    defaultValues: Record<string, any>
-  ): void {
-    Object.entries(defaultValues).forEach(([key, value]) => {
-      this.applyParameterToWebObject(instance, key, value)
-    })
-  }
-
-  private applyTransform(
-    instance: WebObject,
-    options: PrefabInstantiationOptions
-  ): void {
-    // Apply position, scale, rotation through components
-    const transformComponents: WebObjectComponent[] = []
-
-    if (options.position) {
-      // Add position component if needed
-      // This would depend on your component system
-    }
-
-    if (options.scale) {
-      // Add scale component if needed
-    }
-
-    if (options.rotation) {
-      // Add rotation component if needed
-    }
-
-    if (transformComponents.length > 0) {
-      if (!instance.components) {
-        instance.components = []
-      }
-      instance.components.push(...transformComponents)
-    }
+  private generateVariantId(prefabId: string, variantName: string): string {
+    const timestamp = Date.now()
+    const sanitizedName = variantName.toLowerCase().replace(/[^a-z0-9]/g, "-")
+    return `${prefabId}-${sanitizedName}-${timestamp}`
   }
 }

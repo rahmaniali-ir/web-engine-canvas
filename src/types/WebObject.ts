@@ -9,6 +9,7 @@ export interface BaseWebObject {
   content?: string
   // Prefab support
   prefabId?: string
+  prefabVariantId?: string // Which variant of the prefab to use
   prefabParameters?: Record<string, any>
   // State tracking
   states?: {

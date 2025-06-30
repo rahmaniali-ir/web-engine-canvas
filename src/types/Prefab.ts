@@ -5,6 +5,29 @@ import { WebObjectComponent } from "./WebObjectComponent"
 import { PrefabParameter } from "./Asset"
 
 /**
+ * Prefab variant interface - represents a specific variation of a prefab
+ */
+export interface PrefabVariant {
+  id: string
+  name: string
+  description?: string
+
+  // The template WebObject structure for this variant
+  template: WebObject
+
+  // Default values specific to this variant
+  defaultValues?: Record<string, any>
+
+  // Parameters that can be overridden for this variant
+  parameters?: PrefabParameter[]
+
+  // Variant-specific metadata
+  tags?: string[]
+  category?: string
+  isDefault?: boolean // Whether this is the default variant
+}
+
+/**
  * Prefab interface - represents a reusable template for WebObjects
  * Similar to Unity3D's GameObject prefabs
  */
@@ -16,14 +39,20 @@ export interface Prefab {
   author?: string
   tags?: string[]
 
-  // The template WebObject structure
+  // The default template WebObject structure (for backward compatibility)
   template: WebObject
 
-  // Default values for instantiation
+  // Default values for instantiation (for backward compatibility)
   defaultValues?: Record<string, any>
 
-  // Parameters that can be overridden during instantiation
+  // Parameters that can be overridden during instantiation (for backward compatibility)
   parameters?: PrefabParameter[]
+
+  // Variants of this prefab
+  variants?: PrefabVariant[]
+
+  // Default variant ID (if not specified, uses the first variant or the main template)
+  defaultVariantId?: string
 
   // Creation timestamp
   createdAt: Date
@@ -36,6 +65,7 @@ export interface Prefab {
 export interface PrefabInstance {
   id: string
   prefabId: string
+  variantId?: string // Which variant was used
   instance: WebObject
   parameters: Record<string, any>
   createdAt: Date
@@ -54,6 +84,8 @@ export interface PrefabManifest {
   template: WebObject
   defaultValues?: Record<string, any>
   parameters?: PrefabParameter[]
+  variants?: PrefabVariant[]
+  defaultVariantId?: string
   createdAt: string
   updatedAt: string
 }
@@ -71,6 +103,7 @@ export interface PrefabRegistry {
  */
 export interface PrefabInstantiationOptions {
   parentId?: string
+  variantId?: string // Which variant to instantiate
   parameters?: Record<string, any>
   position?: { x: number; y: number; z?: number }
   scale?: { x: number; y: number; z?: number }
@@ -87,6 +120,16 @@ export interface PrefabSearchOptions {
   tags?: string[]
   category?: string
   author?: string
+  variantId?: string // Filter by specific variant
   limit?: number
   offset?: number
+}
+
+/**
+ * Prefab variant selection options
+ */
+export interface PrefabVariantOptions {
+  variantId?: string
+  fallbackToDefault?: boolean // Whether to fallback to default variant if specified variant not found
+  fallbackToMain?: boolean // Whether to fallback to main template if no variants exist
 }
