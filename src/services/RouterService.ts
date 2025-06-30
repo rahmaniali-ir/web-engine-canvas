@@ -34,6 +34,16 @@ export class RouterService {
     }
   }
 
+  private hasStateChanged(newState: RouterState): boolean {
+    return (
+      this.state.currentPath !== newState.currentPath ||
+      this.state.currentRoute?.path !== newState.currentRoute?.path ||
+      this.state.currentScene?.id !== newState.currentScene?.id ||
+      JSON.stringify(this.state.params) !== JSON.stringify(newState.params) ||
+      JSON.stringify(this.state.query) !== JSON.stringify(newState.query)
+    )
+  }
+
   private findRouteByPath(path: string): Route | null {
     const findRoute = (routes: Route[]): Route | null => {
       for (const route of routes) {
@@ -114,7 +124,7 @@ export class RouterService {
     const params = this.extractParams(path, route)
     const query = this.extractQueryParams()
 
-    this.state = {
+    const newState = {
       currentPath: path,
       currentRoute: route,
       currentScene: scene,
@@ -122,11 +132,15 @@ export class RouterService {
       query,
     }
 
-    // Update browser history
-    window.history.pushState({}, "", path)
+    if (this.hasStateChanged(newState)) {
+      this.state = newState
 
-    // Notify listeners
-    this.notifyListeners()
+      // Update browser history
+      window.history.pushState({}, "", path)
+
+      // Notify listeners
+      this.notifyListeners()
+    }
   }
 
   public goBack(): void {
@@ -158,7 +172,7 @@ export class RouterService {
       const params = this.extractParams(path, route)
       const query = this.extractQueryParams()
 
-      this.state = {
+      const newState = {
         currentPath: path,
         currentRoute: route,
         currentScene: scene,
@@ -166,7 +180,10 @@ export class RouterService {
         query,
       }
 
-      this.notifyListeners()
+      if (this.hasStateChanged(newState)) {
+        this.state = newState
+        this.notifyListeners()
+      }
     })
 
     // Navigate to default route if no route is matched

@@ -18,3 +18,6 @@ export * from "./Prefab"
 
 // Asset types
 export * from "./Asset"
+
+// Event types
+export * from "./Events"

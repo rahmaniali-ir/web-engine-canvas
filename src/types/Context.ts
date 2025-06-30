@@ -3,6 +3,7 @@ import { Manifest } from "./Manifest"
 import { RouterState } from "../services/RouterService"
 import { AssetService } from "../services/AssetService"
 import { AnimationService } from "../services/AnimationService"
+import { EventService } from "../services/EventService"
 
 export interface WebObjectTree {
   root: WebObject
@@ -18,6 +19,7 @@ export interface WebObjectContext {
   routerState: RouterState
   assetService: AssetService | null
   animationService: AnimationService | null
+  eventService: EventService
   navigate: (path: string) => void
   goBack: () => void
   goForward: () => void

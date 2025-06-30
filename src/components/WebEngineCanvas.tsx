@@ -5,27 +5,33 @@ import { RouterService, RouterState } from "../services/RouterService"
 import { WebObjectTreeService } from "../services/WebObjectTreeService"
 import { AssetService } from "../services/AssetService"
 import { AnimationService } from "../services/AnimationService"
+import { EventService } from "../services/EventService"
 import { Manifest } from "../types/Manifest"
+import { DebugConfig, CanvasEventUnion } from "../types/Events"
 import WebObjectComponent from "./WebObject"
 
 export interface WebEngineCanvasProps {
   manifest: Manifest
   className?: string
   style?: React.CSSProperties
+  debug?: boolean | DebugConfig
   onCanvasReady?: (context: WebObjectContext) => void
   onWebObjectReady?: (element: HTMLElement, webObject: WebObject) => void
   onWebObjectUpdate?: (element: HTMLElement, webObject: WebObject) => void
   onRouteChange?: (state: RouterState) => void
+  onEvent?: (event: CanvasEventUnion) => void
 }
 
 const WebEngineCanvas: React.FC<WebEngineCanvasProps> = ({
   manifest,
   className = "",
   style = {},
+  debug = false,
   onCanvasReady,
   onWebObjectReady,
   onWebObjectUpdate,
   onRouteChange,
+  onEvent,
 }) => {
   const canvasRef = useRef<HTMLDivElement>(null)
   const [routerService, setRouterService] = useState<RouterService | null>(null)
@@ -37,6 +43,71 @@ const WebEngineCanvas: React.FC<WebEngineCanvasProps> = ({
   const [animationService, setAnimationService] =
     useState<AnimationService | null>(null)
   const [isTransitioning, setIsTransitioning] = useState(false)
+  const previousRouterStateRef = useRef<RouterState | null>(null)
+  const lastDebugLogRef = useRef<Record<string, number>>({})
+
+  // Initialize debug configuration
+  const debugConfig = useMemo((): DebugConfig => {
+    if (typeof debug === "boolean") {
+      return {
+        enabled: debug,
+        logLevel: "log",
+        logToConsole: debug,
+        includeTimestamps: true,
+        includeStackTraces: false,
+      }
+    }
+    // If debug is an object, use it directly with defaults
+    const config = debug as DebugConfig
+    return {
+      enabled: config.enabled ?? true,
+      logLevel: config.logLevel ?? "log",
+      logToConsole: config.logToConsole ?? true,
+      includeTimestamps: config.includeTimestamps ?? true,
+      includeStackTraces: config.includeStackTraces ?? false,
+      logToCustomHandler: config.logToCustomHandler,
+      filterEvents: config.filterEvents,
+    }
+  }, [debug])
+
+  // Helper function to throttle debug logging
+  const debugLog = useCallback(
+    (key: string, message: string, ...args: any[]) => {
+      if (!debugConfig.enabled) return
+
+      const now = Date.now()
+      const lastLog = lastDebugLogRef.current[key] || 0
+      const throttleMs = 2000 // Only log same message once per 2 seconds
+
+      if (now - lastLog < throttleMs) {
+        return
+      }
+
+      lastDebugLogRef.current[key] = now
+      console.log(message, ...args)
+    },
+    [debugConfig.enabled]
+  )
+
+  // Initialize event service
+  const eventService = useMemo(
+    () => new EventService(debugConfig),
+    [debugConfig]
+  )
+
+  // Set up event listeners
+  useEffect(() => {
+    if (onEvent) {
+      eventService.on("*", onEvent)
+      return () => eventService.off("*", onEvent)
+    }
+  }, [eventService, onEvent])
+
+  // Emit canvas mount event
+  useEffect(() => {
+    eventService.emitCanvasMount()
+    return () => eventService.emitCanvasUnmount()
+  }, [eventService])
 
   // Initialize the asset service when manifest changes
   useEffect(() => {
@@ -45,43 +116,82 @@ const WebEngineCanvas: React.FC<WebEngineCanvasProps> = ({
 
       // Initialize with assets from manifest
       const assets = Array.from(manifest.assets.values())
-      console.log(
+      debugLog(
+        "assets_loading",
         "WebEngineCanvas: Loading assets:",
         assets.map(a => ({ id: a.id, type: a.type }))
       )
+
       assetService.initializeFromManifest(assets)
       setAssetService(assetService)
-      console.log(
+      eventService.emitServiceInitialize("asset")
+
+      debugLog(
+        "assets_ready",
         "WebEngineCanvas: AssetService initialized with",
         assets.length,
         "assets"
       )
     }
-  }, [manifest?.assets])
+  }, [manifest?.assets, debugConfig.enabled, eventService, debugLog])
 
   // Initialize the router service when manifest changes
   useEffect(() => {
-    console.log("WebEngineCanvas: Manifest changed", manifest)
+    debugLog("manifest_change", "WebEngineCanvas: Manifest changed", manifest)
+
     if (manifest) {
       const router = new RouterService(manifest)
       router.initialize()
       setRouterService(router)
+      eventService.emitServiceInitialize("router")
 
       // Subscribe to router state changes
       const unsubscribe = router.subscribe(state => {
-        console.log("WebEngineCanvas: Router state changed", state)
+        debugLog(
+          "router_state_change",
+          "WebEngineCanvas: Router state changed",
+          state
+        )
+
+        const previousState = previousRouterStateRef.current
+        eventService.emitRouteChange(state, previousState)
+
+        // Check if the scene has actually changed
+        const currentSceneId = state.currentScene?.id
+        const previousSceneId = previousState?.currentScene?.id
+        const sceneChanged = currentSceneId !== previousSceneId
 
         if (state.currentScene?.root) {
-          console.log("WebEngineCanvas: Loading scene", state.currentScene.id)
-
-          // Create the tree service for the new scene
-          const newTreeService = new WebObjectTreeService(
-            state.currentScene.root
+          debugLog(
+            "scene_loading",
+            "WebEngineCanvas: Loading scene",
+            state.currentScene.id,
+            sceneChanged ? "(scene changed)" : "(same scene)"
           )
 
-          // Set the new tree service and router state
-          setTreeService(newTreeService)
+          // Only create new tree service if scene has changed
+          if (sceneChanged) {
+            debugLog(
+              "tree_service_create",
+              "WebEngineCanvas: Creating new tree service for scene:",
+              state.currentScene.id
+            )
+            const newTreeService = new WebObjectTreeService(
+              state.currentScene.root
+            )
+            setTreeService(newTreeService)
+            eventService.emitServiceInitialize("tree")
+          } else {
+            debugLog(
+              "tree_service_skip",
+              "WebEngineCanvas: Skipping tree service creation - same scene:",
+              state.currentScene.id
+            )
+          }
+
+          // Update router state
           setRouterState(state)
+          previousRouterStateRef.current = state
           setIsTransitioning(false)
 
           if (onRouteChange) {
@@ -91,6 +201,7 @@ const WebEngineCanvas: React.FC<WebEngineCanvasProps> = ({
           // No scene found
           setTreeService(null)
           setRouterState(state)
+          previousRouterStateRef.current = state
           setIsTransitioning(false)
 
           if (onRouteChange) {
@@ -106,87 +217,123 @@ const WebEngineCanvas: React.FC<WebEngineCanvasProps> = ({
           initialState.currentScene.root
         )
         setTreeService(initialService)
+        eventService.emitServiceInitialize("tree")
       }
       setRouterState(initialState)
+      previousRouterStateRef.current = initialState
 
       return unsubscribe
     }
-  }, [manifest, onRouteChange])
+  }, [manifest, onRouteChange, debugConfig.enabled, eventService, debugLog])
 
   // Initialize the animation service when asset service changes
   useEffect(() => {
     if (assetService) {
-      console.log(
+      debugLog(
+        "animation_service_init",
         "WebEngineCanvas: Initializing AnimationService with AssetService"
       )
       const animationService = new AnimationService(assetService)
       setAnimationService(animationService)
-      console.log("WebEngineCanvas: AnimationService initialized")
+      eventService.emitServiceInitialize("animation")
+      debugLog(
+        "animation_service_ready",
+        "WebEngineCanvas: AnimationService initialized"
+      )
     } else {
-      console.log(
+      debugLog(
+        "animation_service_no_asset",
         "WebEngineCanvas: No AssetService available for AnimationService"
       )
     }
-  }, [assetService])
+  }, [assetService, debugConfig.enabled, eventService, debugLog])
 
   // Memoized context methods to prevent recreation
   const updateWebObject = useCallback(
     (id: string, updates: Partial<WebObject>) => {
       if (treeService) {
-        treeService.updateNode(id, updates)
+        const node = treeService.getNode(id)
+        if (node) {
+          treeService.updateNode(id, updates)
+          eventService.emitWebObjectUpdate(id, { ...node, ...updates })
+        }
       }
     },
-    [treeService]
+    [treeService, eventService]
   )
 
   const addWebObject = useCallback(
     (parentId: string, webObject: WebObject) => {
       if (treeService) {
-        treeService.addNode(parentId, webObject)
+        const success = treeService.addNode(parentId, webObject)
+        if (success) {
+          eventService.emitWebObjectAdd(webObject.id, webObject, parentId)
+        }
       }
     },
-    [treeService]
+    [treeService, eventService]
   )
 
   const removeWebObject = useCallback(
     (id: string) => {
       if (treeService) {
-        treeService.removeNode(id)
+        const node = treeService.getNode(id)
+        if (node) {
+          const success = treeService.removeNode(id)
+          if (success) {
+            eventService.emitWebObjectRemove(id, node)
+          }
+        }
       }
     },
-    [treeService]
+    [treeService, eventService]
   )
 
   const moveWebObject = useCallback(
     (id: string, newParentId: string) => {
       if (treeService) {
-        treeService.moveNode(id, newParentId)
+        const node = treeService.getNode(id)
+        const oldParentId = treeService.getParent(id)?.id
+        if (node) {
+          const success = treeService.moveNode(id, newParentId)
+          if (success) {
+            eventService.emitWebObjectMove(
+              id,
+              node,
+              oldParentId || "",
+              newParentId
+            )
+          }
+        }
       }
     },
-    [treeService]
+    [treeService, eventService]
   )
 
   // Navigation methods
   const navigate = useCallback(
     (path: string) => {
       if (routerService) {
+        eventService.emitRouteNavigate(path, routerService.getState())
         routerService.navigate(path)
       }
     },
-    [routerService]
+    [routerService, eventService]
   )
 
   const goBack = useCallback(() => {
     if (routerService) {
+      eventService.emitRouteBack(routerService.getState())
       routerService.goBack()
     }
-  }, [routerService])
+  }, [routerService, eventService])
 
   const goForward = useCallback(() => {
     if (routerService) {
+      eventService.emitRouteForward(routerService.getState())
       routerService.goForward()
     }
-  }, [routerService])
+  }, [routerService, eventService])
 
   // Memoized context object
   const webObjectContext = useMemo(() => {
@@ -206,12 +353,15 @@ const WebEngineCanvas: React.FC<WebEngineCanvasProps> = ({
       addWebObject,
       removeWebObject,
       moveWebObject,
+      eventService, // Expose event service in context
     } as WebObjectContext
 
-    console.log(
-      "WebEngineCanvas: Created context with animationService:",
-      !!animationService
-    )
+    if (debugConfig.enabled) {
+      console.log(
+        "WebEngineCanvas: Created context with animationService:",
+        !!animationService
+      )
+    }
     return context
   }, [
     treeService,
@@ -226,38 +376,44 @@ const WebEngineCanvas: React.FC<WebEngineCanvasProps> = ({
     addWebObject,
     removeWebObject,
     moveWebObject,
+    eventService,
+    debugConfig.enabled,
   ])
 
   // Notify when context is ready
   useEffect(() => {
     if (webObjectContext && onCanvasReady) {
+      eventService.emitCanvasReady(webObjectContext)
       onCanvasReady(webObjectContext)
     }
-  }, [webObjectContext, onCanvasReady])
+  }, [webObjectContext, onCanvasReady, eventService])
 
   // Handle WebObject ready events
   const handleWebObjectReady = useCallback(
     (element: HTMLElement, webObject: WebObject) => {
+      eventService.emitWebObjectReady(webObject.id, webObject, element)
       if (onWebObjectReady) {
         onWebObjectReady(element, webObject)
       }
     },
-    [onWebObjectReady]
+    [onWebObjectReady, eventService]
   )
 
   // Handle WebObject update events
   const handleWebObjectUpdate = useCallback(
     (element: HTMLElement, webObject: WebObject) => {
+      eventService.emitWebObjectUpdate(webObject.id, webObject, element)
       if (onWebObjectUpdate) {
         onWebObjectUpdate(element, webObject)
       }
     },
-    [onWebObjectUpdate]
+    [onWebObjectUpdate, eventService]
   )
 
   // Debug logging
-  if (treeService && routerState?.currentScene) {
-    console.log(
+  if (debugConfig.enabled && treeService && routerState?.currentScene) {
+    debugLog(
+      "render_tree",
       "WebEngineCanvas: Rendering WebObjectComponent with scene root",
       treeService.getTree().root
     )
