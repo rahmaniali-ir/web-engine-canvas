@@ -12,7 +12,17 @@ import { PrefabParameter, WebObject } from "../types"
  * Provides easy access to prefab functionality
  */
 export const usePrefabs = () => {
-  const [prefabService] = useState(() => new PrefabService())
+  const [prefabService] = useState(
+    () =>
+      new PrefabService({
+        id: "default",
+        name: "Default Manifest",
+        version: "1.0.0",
+        routes: [],
+        scenes: [],
+        assets: new Map(),
+      })
+  )
   const [selectedPrefabId, setSelectedPrefabId] = useState<string | null>(null)
 
   // Prefab registration

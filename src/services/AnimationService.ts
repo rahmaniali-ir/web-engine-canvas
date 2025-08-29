@@ -79,6 +79,7 @@ export class AnimationService {
         ([property, keyframe]) => {
           const { from, to, duration, easing } = keyframe
           const elementId = element.id || "unknown"
+          console.log("AnimationService: Element ID:", elementId)
 
           console.log(
             "AnimationService: Creating animation for property:",
@@ -198,10 +199,17 @@ export class AnimationService {
    * Stop animation on element
    */
   public stopAnimation(element: HTMLElement, animationId?: string) {
+    console.log(
+      "AnimationService: stopAnimation called with:",
+      element,
+      animationId
+    )
+
     const elementAnimations = this.elementAnimations.get(element)
     if (elementAnimations) {
       elementAnimations.forEach((animation, property) => {
         animation.cancel()
+        console.log("AnimationService: Stopped animation:", animation, property)
       })
       this.elementAnimations.delete(element)
     }
@@ -211,10 +219,17 @@ export class AnimationService {
    * Pause animation on element
    */
   public pauseAnimation(element: HTMLElement, animationId?: string) {
+    console.log(
+      "AnimationService: pauseAnimation called with:",
+      element,
+      animationId
+    )
+
     const elementAnimations = this.elementAnimations.get(element)
     if (elementAnimations) {
       elementAnimations.forEach((animation, property) => {
         animation.pause()
+        console.log("AnimationService: Paused animation:", animation, property)
       })
     }
   }
@@ -223,10 +238,17 @@ export class AnimationService {
    * Resume animation on element
    */
   public resumeAnimation(element: HTMLElement, animationId?: string) {
+    console.log(
+      "AnimationService: resumeAnimation called with:",
+      element,
+      animationId
+    )
+
     const elementAnimations = this.elementAnimations.get(element)
     if (elementAnimations) {
       elementAnimations.forEach((animation, property) => {
         animation.play()
+        console.log("AnimationService: Resumed animation:", animation, property)
       })
     }
   }
@@ -239,6 +261,12 @@ export class AnimationService {
     animationId?: string
   ): boolean {
     const elementAnimations = this.elementAnimations.get(element)
+    console.log(
+      "AnimationService: elementAnimations:",
+      elementAnimations,
+      animationId
+    )
+
     if (elementAnimations) {
       for (const animation of elementAnimations.values()) {
         if (animation.playState === "running") {

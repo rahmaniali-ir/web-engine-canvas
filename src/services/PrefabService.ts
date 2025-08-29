@@ -1,17 +1,15 @@
+import { PrefabParameter } from "../types/Asset"
+import { Manifest } from "../types/Manifest"
 import {
   Prefab,
   PrefabInstance,
+  PrefabInstantiationOptions,
   PrefabManifest,
   PrefabRegistry,
-  PrefabInstantiationOptions,
   PrefabSearchOptions,
   PrefabVariant,
-  PrefabVariantOptions,
 } from "../types/Prefab"
 import { WebObject } from "../types/WebObject"
-import { WebObjectComponent } from "../types/WebObjectComponent"
-import { PrefabParameter } from "../types/Asset"
-import { Manifest } from "../types/Manifest"
 
 /**
  * PrefabService - Manages prefab registration, instantiation, and lifecycle
