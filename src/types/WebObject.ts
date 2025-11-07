@@ -2,6 +2,12 @@
 
 import { WebObjectComponent } from "./WebObjectComponent"
 
+export interface WebObjectEventListener {
+  name: string
+  preventDefault?: boolean
+  stopPropagation?: boolean
+}
+
 export interface BaseWebObject {
   id: string
   components?: WebObjectComponent[]
@@ -21,6 +27,7 @@ export interface BaseWebObject {
     selected?: boolean
     [key: string]: boolean | undefined
   }
+  eventListeners?: WebObjectEventListener[]
   // State change handlers
   onStateChange?: (state: string, value: boolean) => void
 }

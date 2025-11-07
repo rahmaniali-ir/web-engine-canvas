@@ -1,22 +1,21 @@
 import {
   CanvasEventUnion,
-  EventEmitter,
+  CanvasMountEvent,
+  CanvasReadyEvent,
+  CanvasUnmountEvent,
   DebugConfig,
   DebugEvent,
-  WebObjectReadyEvent,
-  WebObjectUpdateEvent,
-  WebObjectAddEvent,
-  WebObjectRemoveEvent,
-  WebObjectMoveEvent,
-  RouteChangeEvent,
-  RouteNavigateEvent,
+  EventEmitter,
   RouteBackEvent,
+  RouteChangeEvent,
   RouteForwardEvent,
-  ServiceInitializeEvent,
+  RouteNavigateEvent,
   ServiceErrorEvent,
-  CanvasReadyEvent,
-  CanvasMountEvent,
-  CanvasUnmountEvent,
+  ServiceInitializeEvent,
+  WebObjectAddEvent,
+  WebObjectEvent,
+  WebObjectMoveEvent,
+  WebObjectRemoveEvent,
 } from "../types/Events"
 
 export class EventService implements EventEmitter {
@@ -59,13 +58,13 @@ export class EventService implements EventEmitter {
     }
 
     // Emit to specific event listeners
-    const eventListeners = this.listeners.get(event.type)
+    const eventListeners = this.listeners.get(event.name)
     if (eventListeners) {
       eventListeners.forEach(listener => {
         try {
           listener(event)
         } catch (error) {
-          console.error(`Error in event listener for ${event.type}:`, error)
+          console.error(`Error in event listener for ${event.name}:`, error)
         }
       })
     }
@@ -92,81 +91,64 @@ export class EventService implements EventEmitter {
   }
 
   // Helper methods for creating specific events
-  emitWebObjectReady(
-    webObjectId: string,
-    webObject: any,
-    element?: HTMLElement
-  ): void {
-    const event: WebObjectReadyEvent = {
-      type: "webObject",
-      subtype: "ready",
+  emitWebObjectReady(webObject: any, element?: HTMLElement): void {
+    const event: WebObjectEvent = {
+      name: "webObject",
+      type: "ready",
       timestamp: Date.now(),
       source: "WebObjectComponent",
-      webObjectId,
       webObject,
       element,
     }
     this.emit(event)
   }
 
-  emitWebObjectUpdate(
-    webObjectId: string,
-    webObject: any,
-    element?: HTMLElement
-  ): void {
-    const event: WebObjectUpdateEvent = {
-      type: "webObject",
-      subtype: "update",
+  emitWebObjectUpdate(webObject: any, element?: HTMLElement): void {
+    const event: WebObjectEvent = {
+      name: "webObject",
+      type: "update",
       timestamp: Date.now(),
-      source: "WebObjectComponent",
-      webObjectId,
+      source: "EventService",
       webObject,
       element,
     }
     this.emit(event)
   }
 
-  emitWebObjectAdd(
-    webObjectId: string,
-    webObject: any,
-    parentId: string
-  ): void {
+  emitWebObjectAdd(webObject: any, parentId: string): void {
     const event: WebObjectAddEvent = {
-      type: "webObject",
-      subtype: "add",
+      name: "webObject",
+      type: "add",
       timestamp: Date.now(),
       source: "WebObjectTreeService",
-      webObjectId,
       webObject,
       parentId,
     }
     this.emit(event)
   }
 
-  emitWebObjectRemove(webObjectId: string, webObject: any): void {
+  emitWebObjectRemove(_webObjectId: string, webObject: any): void {
     const event: WebObjectRemoveEvent = {
-      type: "webObject",
-      subtype: "remove",
+      name: "webObject",
+      type: "remove",
       timestamp: Date.now(),
       source: "WebObjectTreeService",
-      webObjectId,
       webObject,
     }
     this.emit(event)
   }
 
   emitWebObjectMove(
-    webObjectId: string,
+    _: string,
     webObject: any,
     oldParentId: string,
     newParentId: string
   ): void {
     const event: WebObjectMoveEvent = {
-      type: "webObject",
-      subtype: "move",
+      name: "webObject",
+      type: "move",
       timestamp: Date.now(),
       source: "WebObjectTreeService",
-      webObjectId,
       webObject,
       oldParentId,
       newParentId,
@@ -174,10 +156,30 @@ export class EventService implements EventEmitter {
     this.emit(event)
   }
 
+  emitWebObjectEvent(
+    webObject: any,
+    eventName: string,
+    element?: HTMLElement,
+    nativeEvent?: Event
+  ): WebObjectEvent {
+    const event: WebObjectEvent = {
+      name: "webObject",
+      type: eventName,
+      timestamp: Date.now(),
+      source: "EventService",
+      webObject,
+      element,
+      nativeEvent,
+    }
+
+    this.emit(event)
+    return event
+  }
+
   emitRouteChange(routerState: any, previousState?: any): void {
     const event: RouteChangeEvent = {
-      type: "router",
-      subtype: "change",
+      name: "router",
+      type: "change",
       timestamp: Date.now(),
       source: "RouterService",
       routerState,
@@ -188,8 +190,8 @@ export class EventService implements EventEmitter {
 
   emitRouteNavigate(path: string, routerState: any): void {
     const event: RouteNavigateEvent = {
-      type: "router",
-      subtype: "navigate",
+      name: "router",
+      type: "navigate",
       timestamp: Date.now(),
       source: "RouterService",
       path,
@@ -200,8 +202,8 @@ export class EventService implements EventEmitter {
 
   emitRouteBack(routerState: any): void {
     const event: RouteBackEvent = {
-      type: "router",
-      subtype: "back",
+      name: "router",
+      type: "back",
       timestamp: Date.now(),
       source: "RouterService",
       routerState,
@@ -211,8 +213,8 @@ export class EventService implements EventEmitter {
 
   emitRouteForward(routerState: any): void {
     const event: RouteForwardEvent = {
-      type: "router",
-      subtype: "forward",
+      name: "router",
+      type: "forward",
       timestamp: Date.now(),
       source: "RouterService",
       routerState,
@@ -224,8 +226,8 @@ export class EventService implements EventEmitter {
     serviceName: "asset" | "animation" | "router" | "tree"
   ): void {
     const event: ServiceInitializeEvent = {
-      type: "service",
-      subtype: "initialize",
+      name: "service",
+      type: "initialize",
       timestamp: Date.now(),
       source: "Canvas",
       serviceName,
@@ -235,8 +237,8 @@ export class EventService implements EventEmitter {
 
   emitServiceError(serviceName: string, error: Error): void {
     const event: ServiceErrorEvent = {
-      type: "service",
-      subtype: "error",
+      name: "service",
+      type: "error",
       timestamp: Date.now(),
       source: "Canvas",
       serviceName,
@@ -247,8 +249,8 @@ export class EventService implements EventEmitter {
 
   emitCanvasReady(context: any): void {
     const event: CanvasReadyEvent = {
-      type: "canvas",
-      subtype: "ready",
+      name: "canvas",
+      type: "ready",
       timestamp: Date.now(),
       source: "WebEngineCanvas",
       context,
@@ -258,8 +260,8 @@ export class EventService implements EventEmitter {
 
   emitCanvasMount(): void {
     const event: CanvasMountEvent = {
-      type: "canvas",
-      subtype: "mount",
+      name: "canvas",
+      type: "mount",
       timestamp: Date.now(),
       source: "WebEngineCanvas",
     }
@@ -268,8 +270,8 @@ export class EventService implements EventEmitter {
 
   emitCanvasUnmount(): void {
     const event: CanvasUnmountEvent = {
-      type: "canvas",
-      subtype: "unmount",
+      name: "canvas",
+      type: "unmount",
       timestamp: Date.now(),
       source: "WebEngineCanvas",
     }
@@ -280,13 +282,13 @@ export class EventService implements EventEmitter {
   private logDebugEvent(event: CanvasEventUnion): void {
     if (
       this.debugConfig.filterEvents &&
-      !this.debugConfig.filterEvents.includes(event.type)
+      !this.debugConfig.filterEvents.includes(event.name)
     ) {
       return
     }
 
     // Throttle logging to prevent excessive console output
-    const eventKey = `${event.type}:${this.getEventSubtype(event)}`
+    const eventKey = `${event.name}:${this.getEventtype(event)}`
     const now = Date.now()
     const lastLog = this.lastLogTime.get(eventKey) || 0
 
@@ -297,43 +299,15 @@ export class EventService implements EventEmitter {
     this.lastLogTime.set(eventKey, now)
 
     const debugEvent: DebugEvent = {
-      type: "debug",
+      name: "debug",
       timestamp: Date.now(),
       source: "EventService",
       level: "log",
-      message: `[${event.type}] ${event.source}`,
+      message: `[${event.name}] ${event.source}`,
       details: event,
     }
 
     if (this.debugConfig.logToConsole) {
-      const timestamp = this.debugConfig.includeTimestamps
-        ? `[${new Date(event.timestamp).toISOString()}] `
-        : ""
-
-      const prefix = `${timestamp}[Canvas]`
-
-      switch (event.type) {
-        case "webObject":
-          console.log(
-            `${prefix} WebObject ${event.subtype}: ${event.webObjectId}`,
-            event
-          )
-          break
-        case "router":
-          console.log(`${prefix} Router ${event.subtype}:`, event)
-          break
-        case "service":
-          console.log(
-            `${prefix} Service ${event.subtype}: ${event.serviceName}`,
-            event
-          )
-          break
-        case "canvas":
-          console.log(`${prefix} Canvas ${event.subtype}:`, event)
-          break
-        default:
-          console.log(`${prefix} Unknown event:`, event)
-      }
     }
 
     if (this.debugConfig.logToCustomHandler) {
@@ -341,13 +315,13 @@ export class EventService implements EventEmitter {
     }
   }
 
-  private getEventSubtype(event: CanvasEventUnion): string {
-    // Check if the event has a subtype property
-    if ("subtype" in event && event.subtype) {
-      return event.subtype
+  private getEventtype(event: CanvasEventUnion): string {
+    // Check if the event has a type property
+    if ("type" in event && event.type) {
+      return event.type
     }
 
-    // For events without subtype, use a default
+    // For events without type, use a default
     return "default"
   }
 

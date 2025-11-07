@@ -1,13 +1,13 @@
-import React, { useRef, useState, useEffect, useCallback, useMemo } from "react"
-import { WebObject } from "../types/WebObject"
-import { WebObjectContext } from "../types/Context"
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { AnimationService } from "../services/AnimationService"
+import { AssetService } from "../services/AssetService"
+import { EventService } from "../services/EventService"
 import { RouterService, RouterState } from "../services/RouterService"
 import { WebObjectTreeService } from "../services/WebObjectTreeService"
-import { AssetService } from "../services/AssetService"
-import { AnimationService } from "../services/AnimationService"
-import { EventService } from "../services/EventService"
+import { WebObjectContext } from "../types/Context"
+import { CanvasEventUnion, DebugConfig } from "../types/Events"
 import { Manifest } from "../types/Manifest"
-import { DebugConfig, CanvasEventUnion } from "../types/Events"
+import { WebObject, WebObjectEventListener } from "../types/WebObject"
 import WebObjectComponent from "./WebObject"
 
 export interface WebEngineCanvasProps {
@@ -15,6 +15,7 @@ export interface WebEngineCanvasProps {
   className?: string
   style?: React.CSSProperties
   debug?: boolean | DebugConfig
+  globalEvents?: WebObjectEventListener[]
   onCanvasReady?: (context: WebObjectContext) => void
   onWebObjectReady?: (element: HTMLElement, webObject: WebObject) => void
   onWebObjectUpdate?: (element: HTMLElement, webObject: WebObject) => void
@@ -27,9 +28,8 @@ const WebEngineCanvas: React.FC<WebEngineCanvasProps> = ({
   className = "",
   style = {},
   debug = false,
+  globalEvents = [],
   onCanvasReady,
-  onWebObjectReady,
-  onWebObjectUpdate,
   onRouteChange,
   onEvent,
 }) => {
@@ -72,7 +72,7 @@ const WebEngineCanvas: React.FC<WebEngineCanvasProps> = ({
 
   // Helper function to throttle debug logging
   const debugLog = useCallback(
-    (key: string, message: string, ...args: any[]) => {
+    (key: string, _message: string, ..._args: any[]) => {
       if (!debugConfig.enabled) return
 
       const now = Date.now()
@@ -84,7 +84,6 @@ const WebEngineCanvas: React.FC<WebEngineCanvasProps> = ({
       }
 
       lastDebugLogRef.current[key] = now
-      console.log(message, ...args)
     },
     [debugConfig.enabled]
   )
@@ -255,7 +254,7 @@ const WebEngineCanvas: React.FC<WebEngineCanvasProps> = ({
         const node = treeService.getNode(id)
         if (node) {
           treeService.updateNode(id, updates)
-          eventService.emitWebObjectUpdate(id, { ...node, ...updates })
+          eventService.emitWebObjectUpdate({ ...node, ...updates })
         }
       }
     },
@@ -267,7 +266,7 @@ const WebEngineCanvas: React.FC<WebEngineCanvasProps> = ({
       if (treeService) {
         const success = treeService.addNode(parentId, webObject)
         if (success) {
-          eventService.emitWebObjectAdd(webObject.id, webObject, parentId)
+          eventService.emitWebObjectAdd(webObject, parentId)
         }
       }
     },
@@ -356,12 +355,6 @@ const WebEngineCanvas: React.FC<WebEngineCanvasProps> = ({
       eventService, // Expose event service in context
     } as WebObjectContext
 
-    if (debugConfig.enabled) {
-      console.log(
-        "WebEngineCanvas: Created context with animationService:",
-        !!animationService
-      )
-    }
     return context
   }, [
     treeService,
@@ -387,28 +380,6 @@ const WebEngineCanvas: React.FC<WebEngineCanvasProps> = ({
       onCanvasReady(webObjectContext)
     }
   }, [webObjectContext, onCanvasReady, eventService])
-
-  // Handle WebObject ready events
-  const handleWebObjectReady = useCallback(
-    (element: HTMLElement, webObject: WebObject) => {
-      eventService.emitWebObjectReady(webObject.id, webObject, element)
-      if (onWebObjectReady) {
-        onWebObjectReady(element, webObject)
-      }
-    },
-    [onWebObjectReady, eventService]
-  )
-
-  // Handle WebObject update events
-  const handleWebObjectUpdate = useCallback(
-    (element: HTMLElement, webObject: WebObject) => {
-      eventService.emitWebObjectUpdate(webObject.id, webObject, element)
-      if (onWebObjectUpdate) {
-        onWebObjectUpdate(element, webObject)
-      }
-    },
-    [onWebObjectUpdate, eventService]
-  )
 
   // Debug logging
   if (debugConfig.enabled && treeService && routerState?.currentScene) {
@@ -442,8 +413,8 @@ const WebEngineCanvas: React.FC<WebEngineCanvasProps> = ({
           <WebObjectComponent
             webObject={treeService.getTree().root}
             context={webObjectContext || undefined}
-            onWebObjectReady={handleWebObjectReady}
-            onWebObjectUpdate={handleWebObjectUpdate}
+            eventListeners={globalEvents}
+            onEvent={onEvent}
           />
         </div>
       ) : (

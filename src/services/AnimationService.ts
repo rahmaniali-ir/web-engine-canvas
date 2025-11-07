@@ -37,18 +37,10 @@ export class AnimationService {
       duration?: number
     } = {}
   ) {
-    console.log("AnimationService: playAnimation called with:", {
-      animationId,
-      options,
-      element,
-    })
-
     const animationAsset = this.assetService.getAssetByType<AnimationAsset>(
       animationId,
       "animation"
     )
-
-    console.log("AnimationService: Found animation asset:", animationAsset)
 
     if (!animationAsset) {
       console.error("AnimationService: Animation asset not found:", animationId)
@@ -57,11 +49,6 @@ export class AnimationService {
 
     // Apply keyframe animations
     if (animationAsset.keyframeAnimations) {
-      console.log(
-        "AnimationService: Processing keyframe animations:",
-        animationAsset.keyframeAnimations
-      )
-
       const animationOptions = {
         duration: options.duration || animationAsset.duration,
         easing: animationAsset.easing,
@@ -73,22 +60,9 @@ export class AnimationService {
         delay: options.delay || 0,
       }
 
-      console.log("AnimationService: Animation options:", animationOptions)
-
       Object.entries(animationAsset.keyframeAnimations).forEach(
         ([property, keyframe]) => {
           const { from, to, duration, easing } = keyframe
-          const elementId = element.id || "unknown"
-          console.log("AnimationService: Element ID:", elementId)
-
-          console.log(
-            "AnimationService: Creating animation for property:",
-            property,
-            "from:",
-            from,
-            "to:",
-            to
-          )
 
           if (typeof from === "number" && typeof to === "number") {
             // Calculate initial state based on delay for alternate animations
@@ -112,15 +86,6 @@ export class AnimationService {
                 initialValue = to - (to - from) * reverseProgress
               }
 
-              console.log(
-                "AnimationService: Setting initial value for",
-                property,
-                "to",
-                initialValue,
-                "based on delay",
-                delay
-              )
-
               // Set initial state
               if (property === "opacity") {
                 element.style.opacity = initialValue.toString()
@@ -140,8 +105,6 @@ export class AnimationService {
                 delay: animationOptions.delay,
               }
             )
-
-            console.log("AnimationService: Created animation:", animation)
 
             // Store animation reference
             if (!this.elementAnimations.has(element)) {
@@ -172,11 +135,6 @@ export class AnimationService {
               }
             )
 
-            console.log(
-              "AnimationService: Created string animation:",
-              animation
-            )
-
             // Store animation reference
             if (!this.elementAnimations.has(element)) {
               this.elementAnimations.set(element, new Map())
@@ -198,18 +156,11 @@ export class AnimationService {
   /**
    * Stop animation on element
    */
-  public stopAnimation(element: HTMLElement, animationId?: string) {
-    console.log(
-      "AnimationService: stopAnimation called with:",
-      element,
-      animationId
-    )
-
+  public stopAnimation(element: HTMLElement, _animationId?: string) {
     const elementAnimations = this.elementAnimations.get(element)
     if (elementAnimations) {
-      elementAnimations.forEach((animation, property) => {
+      elementAnimations.forEach((animation, _property) => {
         animation.cancel()
-        console.log("AnimationService: Stopped animation:", animation, property)
       })
       this.elementAnimations.delete(element)
     }
@@ -218,18 +169,11 @@ export class AnimationService {
   /**
    * Pause animation on element
    */
-  public pauseAnimation(element: HTMLElement, animationId?: string) {
-    console.log(
-      "AnimationService: pauseAnimation called with:",
-      element,
-      animationId
-    )
-
+  public pauseAnimation(element: HTMLElement, _animationId?: string) {
     const elementAnimations = this.elementAnimations.get(element)
     if (elementAnimations) {
-      elementAnimations.forEach((animation, property) => {
+      elementAnimations.forEach((animation, _property) => {
         animation.pause()
-        console.log("AnimationService: Paused animation:", animation, property)
       })
     }
   }
@@ -237,18 +181,11 @@ export class AnimationService {
   /**
    * Resume animation on element
    */
-  public resumeAnimation(element: HTMLElement, animationId?: string) {
-    console.log(
-      "AnimationService: resumeAnimation called with:",
-      element,
-      animationId
-    )
-
+  public resumeAnimation(element: HTMLElement, _animationId?: string) {
     const elementAnimations = this.elementAnimations.get(element)
     if (elementAnimations) {
-      elementAnimations.forEach((animation, property) => {
+      elementAnimations.forEach((animation, _property) => {
         animation.play()
-        console.log("AnimationService: Resumed animation:", animation, property)
       })
     }
   }
@@ -258,15 +195,9 @@ export class AnimationService {
    */
   public isAnimationPlaying(
     element: HTMLElement,
-    animationId?: string
+    _animationId?: string
   ): boolean {
     const elementAnimations = this.elementAnimations.get(element)
-    console.log(
-      "AnimationService: elementAnimations:",
-      elementAnimations,
-      animationId
-    )
-
     if (elementAnimations) {
       for (const animation of elementAnimations.values()) {
         if (animation.playState === "running") {

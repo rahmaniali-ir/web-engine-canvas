@@ -1,16 +1,16 @@
 import {
+  AnimationAsset,
   Asset,
-  AssetType,
-  AssetReference,
-  AssetValue,
-  AssetSearchOptions,
   AssetCreationOptions,
+  AssetReference,
+  AssetSearchOptions,
+  AssetType,
+  AssetValue,
+  ComponentAsset,
+  PrefabAsset,
   PrefabParameter,
   ResourceAsset,
-  PrefabAsset,
-  ComponentAsset,
   StylePaletteAsset,
-  AnimationAsset,
 } from "../types/Asset"
 import { WebObject } from "../types/WebObject"
 
@@ -29,26 +29,9 @@ export class AssetService {
    * Initialize asset registry from manifest
    */
   initializeFromManifest(assets: Asset[]): void {
-    console.log("AssetService: Initializing with", assets.length, "assets")
-
-    // Log animation assets specifically
-    const animationAssets = assets.filter(asset => asset.type === "animation")
-    console.log(
-      "AssetService: Found",
-      animationAssets.length,
-      "animation assets:",
-      animationAssets.map(a => ({ id: a.id, name: a.name }))
-    )
-
     assets.forEach(asset => {
       this.assets.set(asset.id, asset)
     })
-
-    console.log(
-      "AssetService: Initialized with",
-      this.assets.size,
-      "total assets"
-    )
   }
 
   /**
@@ -92,7 +75,6 @@ export class AssetService {
       return undefined
     }
 
-    console.log(`AssetService: Found ${type} asset:`, assetId, asset)
     return asset as T
   }
 

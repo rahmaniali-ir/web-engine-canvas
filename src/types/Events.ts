@@ -1,107 +1,100 @@
-import { WebObject } from "./WebObject"
 import { RouterState } from "../services/RouterService"
 import { WebObjectContext } from "./Context"
+import { WebObject } from "./WebObject"
 
 // Base event interface
 export interface BaseEvent {
-  type: string
+  name: string
   timestamp: number
   source: string
+  nativeEvent?: Event
   data?: any
 }
 
 // WebObject events
 export interface WebObjectEvent extends BaseEvent {
-  type: "webObject"
-  webObjectId: string
+  name: "webObject"
+  type: string
   webObject: WebObject
   element?: HTMLElement
 }
 
-export interface WebObjectReadyEvent extends WebObjectEvent {
-  subtype: "ready"
-}
-
-export interface WebObjectUpdateEvent extends WebObjectEvent {
-  subtype: "update"
-}
-
 export interface WebObjectAddEvent extends WebObjectEvent {
-  subtype: "add"
+  type: "add"
   parentId: string
 }
 
 export interface WebObjectRemoveEvent extends WebObjectEvent {
-  subtype: "remove"
+  type: "remove"
 }
 
 export interface WebObjectMoveEvent extends WebObjectEvent {
-  subtype: "move"
+  type: "move"
   oldParentId?: string
   newParentId: string
 }
 
 // Router events
 export interface RouterEvent extends BaseEvent {
-  type: "router"
+  name: "router"
   routerState: RouterState
 }
 
 export interface RouteChangeEvent extends RouterEvent {
-  subtype: "change"
+  type: "change"
   previousState?: RouterState
 }
 
 export interface RouteNavigateEvent extends RouterEvent {
-  subtype: "navigate"
+  type: "navigate"
   path: string
 }
 
 export interface RouteBackEvent extends RouterEvent {
-  subtype: "back"
+  type: "back"
 }
 
 export interface RouteForwardEvent extends RouterEvent {
-  subtype: "forward"
+  type: "forward"
 }
 
 // Service events
 export interface ServiceEvent extends BaseEvent {
-  type: "service"
+  name: "service"
   serviceName: string
 }
 
 export interface ServiceInitializeEvent extends ServiceEvent {
-  subtype: "initialize"
+  type: "initialize"
   serviceName: "asset" | "animation" | "router" | "tree"
 }
 
 export interface ServiceErrorEvent extends ServiceEvent {
-  subtype: "error"
+  type: "error"
   error: Error
 }
 
 // Canvas lifecycle events
 export interface CanvasLifecycleEvent extends BaseEvent {
-  type: "canvas"
+  name: "canvas"
 }
 
 export interface CanvasReadyEvent extends CanvasLifecycleEvent {
-  subtype: "ready"
+  type: "ready"
   context: WebObjectContext
 }
 
 export interface CanvasMountEvent extends CanvasLifecycleEvent {
-  subtype: "mount"
+  type: "mount"
 }
 
 export interface CanvasUnmountEvent extends CanvasLifecycleEvent {
-  subtype: "unmount"
+  type: "unmount"
 }
 
 // Debug events
 export interface DebugEvent extends BaseEvent {
-  type: "debug"
+  name: "debug"
   level: "log" | "warn" | "error" | "info"
   message: string
   details?: any
@@ -109,8 +102,7 @@ export interface DebugEvent extends BaseEvent {
 
 // Union type for all events
 export type CanvasEventUnion =
-  | WebObjectReadyEvent
-  | WebObjectUpdateEvent
+  | WebObjectEvent
   | WebObjectAddEvent
   | WebObjectRemoveEvent
   | WebObjectMoveEvent

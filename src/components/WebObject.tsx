@@ -1,18 +1,23 @@
-import React, { useRef, useEffect, useCallback, useMemo } from "react"
-import { WebObject, WebObjectContext } from "../types"
-import { WebObjectComponentService } from "../services/WebObjectComponentService"
+import React, { useCallback, useEffect, useMemo, useRef } from "react"
 import { AssetService } from "../services/AssetService"
+import { WebObjectComponentService } from "../services/WebObjectComponentService"
+import {
+  WebObject,
+  WebObjectContext,
+  WebObjectEvent,
+  WebObjectEventListener,
+} from "../types"
 import LinkWebObjectComponent from "./specialized/LinkWebObject"
 
 export interface WebObjectProps {
   webObject: WebObject
   context?: WebObjectContext
-  onWebObjectReady?: (element: HTMLElement, webObject: WebObject) => void
-  onWebObjectUpdate?: (element: HTMLElement, webObject: WebObject) => void
+  eventListeners?: WebObjectEventListener[]
+  onEvent?: (event: WebObjectEvent) => void
 }
 
 const WebObjectComponent: React.FC<WebObjectProps> = React.memo(
-  ({ webObject, context, onWebObjectReady, onWebObjectUpdate }) => {
+  ({ webObject, context, eventListeners, onEvent }) => {
     const elementRef = useRef<HTMLElement>(null)
     const componentService = useMemo(() => new WebObjectComponentService(), [])
     const assetService =
@@ -99,27 +104,11 @@ const WebObjectComponent: React.FC<WebObjectProps> = React.memo(
     const instantiatedWebObject = useMemo(() => {
       if (!prefabId || !context?.manifest) return webObject
 
-      console.log(
-        "WebObject: Instantiating prefab",
-        prefabId,
-        "variant:",
-        prefabVariantId || "default",
-        "for",
-        webObject.id
-      )
-
       try {
         // First try to find prefab in the prefabs array
         if (context.manifest.prefabs) {
           const prefab = context.manifest.prefabs.find(p => p.id === prefabId)
           if (prefab) {
-            console.log(
-              "WebObject: Found prefab",
-              prefabId,
-              "with variants:",
-              prefab.variants?.length || 0
-            )
-
             // Get the correct variant
             const variant = getPrefabVariant(prefab, prefabVariantId)
 
@@ -150,16 +139,7 @@ const WebObjectComponent: React.FC<WebObjectProps> = React.memo(
                 ...(webObject.components || []),
               ],
             }
-            console.log(
-              "WebObject: Instantiated prefab result:",
-              result.id,
-              "with components:",
-              result.components?.length || 0,
-              "prefab components:",
-              instance.components?.length || 0,
-              "scene components:",
-              webObject.components?.length || 0
-            )
+
             return result
           }
         }
@@ -268,39 +248,12 @@ const WebObjectComponent: React.FC<WebObjectProps> = React.memo(
 
       // Handle animations
       if (elementRef.current && context?.animationService) {
-        console.log(
-          "WebObject: Checking for animations in",
-          instantiatedWebObject.id,
-          "with components:",
-          instantiatedWebObject.components?.length || 0
-        )
-
         if (instantiatedWebObject.components) {
           instantiatedWebObject.components.forEach(
             (component: any, index: number) => {
-              console.log(
-                "WebObject: Checking component",
-                index,
-                "type:",
-                component.type,
-                "config:",
-                component.config
-              )
-
               if (component.type === "animation") {
-                console.log(
-                  "WebObject: Found animation component:",
-                  component.config
-                )
-
                 if (component.config.autoPlay) {
                   const animationId = component.config.animationId
-                  console.log(
-                    "WebObject: Animation ID:",
-                    animationId,
-                    "type:",
-                    typeof animationId
-                  )
 
                   if (
                     typeof animationId === "string" &&
@@ -311,17 +264,6 @@ const WebObjectComponent: React.FC<WebObjectProps> = React.memo(
                       instantiatedWebObject.prefabParameters?.duration ||
                       component.config.duration ||
                       4000
-
-                    console.log(
-                      "WebObject: Starting animation",
-                      animationId,
-                      "for",
-                      instantiatedWebObject.id,
-                      "with duration:",
-                      duration,
-                      "element:",
-                      elementRef.current
-                    )
 
                     try {
                       context.animationService.playAnimation(
@@ -334,7 +276,6 @@ const WebObjectComponent: React.FC<WebObjectProps> = React.memo(
                           duration: duration,
                         }
                       )
-                      console.log("WebObject: Animation started successfully")
                     } catch (error) {
                       console.error(
                         "WebObject: Error starting animation:",
@@ -349,27 +290,11 @@ const WebObjectComponent: React.FC<WebObjectProps> = React.memo(
                       !!context.animationService
                     )
                   }
-                } else {
-                  console.log("WebObject: Animation not set to autoPlay")
                 }
               }
             }
           )
-        } else {
-          console.log(
-            "WebObject: No components found for",
-            instantiatedWebObject.id
-          )
         }
-      } else {
-        console.log(
-          "WebObject: No element ref or animation service for",
-          instantiatedWebObject.id,
-          "element:",
-          !!elementRef.current,
-          "service:",
-          !!context?.animationService
-        )
       }
 
       // Cleanup animations on unmount
@@ -386,10 +311,68 @@ const WebObjectComponent: React.FC<WebObjectProps> = React.memo(
 
     // Notify when element is ready
     useEffect(() => {
-      if (elementRef.current && onWebObjectReady) {
-        onWebObjectReady(elementRef.current, instantiatedWebObject)
+      if (elementRef.current) {
+        onEvent?.({
+          name: "webObject",
+          type: "ready",
+          element: elementRef.current,
+          webObject: instantiatedWebObject,
+          timestamp: Date.now(),
+          source: "webObject",
+        })
       }
-    }, [instantiatedWebObject, onWebObjectReady])
+    }, [instantiatedWebObject, onEvent])
+
+    useEffect(() => {
+      const element = elementRef.current
+
+      if (!element) return
+
+      const webObjectListeners = [
+        ...(webObject.eventListeners ?? []),
+        ...(eventListeners ?? []),
+      ]
+
+      const handlers: Array<{
+        event: string
+        handler: (event: Event) => void
+      }> = []
+
+      for (const eventListener of webObjectListeners) {
+        const handler = (e: Event) => {
+          if (eventListener.preventDefault) e.preventDefault()
+          if (eventListener.stopPropagation) e.stopPropagation()
+
+          const event: WebObjectEvent = {
+            name: "webObject",
+            type: eventListener.name,
+            timestamp: Date.now(),
+            source: "WebObject",
+            webObject,
+            element,
+            nativeEvent: e,
+          }
+
+          onEvent?.(event)
+
+          context?.eventService.emitWebObjectEvent(
+            webObject,
+            eventListener.name,
+            element,
+            e
+          )
+        }
+
+        element.addEventListener(eventListener.name, handler)
+        handlers.push({ event: eventListener.name, handler })
+      }
+
+      return () => {
+        handlers.forEach(({ event, handler }) => {
+          element.removeEventListener(event, handler)
+        })
+      }
+    }, [webObject.eventListeners, eventListeners])
 
     // List of void elements in HTML
     const voidElements = [
@@ -435,8 +418,8 @@ const WebObjectComponent: React.FC<WebObjectProps> = React.memo(
             key: child.id,
             webObject: child,
             context: context,
-            onWebObjectReady: onWebObjectReady,
-            onWebObjectUpdate: onWebObjectUpdate,
+            eventListeners: eventListeners,
+            onEvent: onEvent,
           })
         ) || [])
       )
@@ -452,8 +435,8 @@ const WebObjectComponent: React.FC<WebObjectProps> = React.memo(
         <LinkWebObjectComponent
           webObject={instantiatedWebObject}
           context={context}
-          onWebObjectReady={onWebObjectReady}
-          onWebObjectUpdate={onWebObjectUpdate}
+          eventListeners={eventListeners}
+          onEvent={onEvent}
         />
       )
     }

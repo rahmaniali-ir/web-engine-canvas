@@ -1,18 +1,23 @@
-import React, { useCallback, useRef, useEffect, useMemo } from "react"
-import { LinkWebObject, WebObjectContext } from "../../types"
-import { WebObjectComponentService } from "../../services/WebObjectComponentService"
+import React, { useCallback, useEffect, useMemo, useRef } from "react"
 import { AssetService } from "../../services/AssetService"
+import { WebObjectComponentService } from "../../services/WebObjectComponentService"
+import {
+  LinkWebObject,
+  WebObjectContext,
+  WebObjectEvent,
+  WebObjectEventListener,
+} from "../../types"
 import WebObjectComponent from "../WebObject"
 
 interface LinkWebObjectProps {
   webObject: LinkWebObject
   context: WebObjectContext
-  onWebObjectReady?: (element: HTMLElement, webObject: LinkWebObject) => void
-  onWebObjectUpdate?: (element: HTMLElement, webObject: LinkWebObject) => void
+  eventListeners?: WebObjectEventListener[]
+  onEvent?: (event: WebObjectEvent) => void
 }
 
 const LinkWebObjectComponent: React.FC<LinkWebObjectProps> = React.memo(
-  ({ webObject, context, onWebObjectReady, onWebObjectUpdate }) => {
+  ({ webObject, context, eventListeners, onEvent }) => {
     const elementRef = useRef<HTMLAnchorElement>(null)
     const componentService = useMemo(() => new WebObjectComponentService(), [])
     const assetService =
@@ -54,28 +59,17 @@ const LinkWebObjectComponent: React.FC<LinkWebObjectProps> = React.memo(
 
     // Notify when element is ready
     useEffect(() => {
-      if (elementRef.current && onWebObjectReady) {
-        onWebObjectReady(elementRef.current, webObject)
+      if (elementRef.current) {
+        onEvent?.({
+          element: elementRef.current,
+          webObject,
+          name: "webObject",
+          type: "ready",
+          timestamp: Date.now(),
+          source: "LinkWebObject",
+        })
       }
-    }, [webObject, onWebObjectReady])
-
-    const handleWebObjectReady = useCallback(
-      (element: HTMLElement) => {
-        if (onWebObjectReady) {
-          onWebObjectReady(element, webObject)
-        }
-      },
-      [onWebObjectReady, webObject]
-    )
-
-    const handleWebObjectUpdate = useCallback(
-      (element: HTMLElement) => {
-        if (onWebObjectUpdate) {
-          onWebObjectUpdate(element, webObject)
-        }
-      },
-      [onWebObjectUpdate, webObject]
-    )
+    }, [webObject, onEvent])
 
     return (
       <a
@@ -91,8 +85,8 @@ const LinkWebObjectComponent: React.FC<LinkWebObjectProps> = React.memo(
             key={child.id}
             webObject={child}
             context={context}
-            onWebObjectReady={handleWebObjectReady}
-            onWebObjectUpdate={handleWebObjectUpdate}
+            eventListeners={eventListeners}
+            onEvent={onEvent}
           />
         ))}
       </a>

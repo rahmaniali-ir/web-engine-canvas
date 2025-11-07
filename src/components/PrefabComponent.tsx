@@ -1,18 +1,15 @@
 import React, { useMemo } from "react"
-import { PrefabInstantiationOptions } from "../types/Prefab"
-import { WebObject } from "../types/WebObject"
-import { WebObjectContext } from "../types/Context"
-import WebObjectComponent from "./WebObject"
 import { usePrefabs } from "../hooks/usePrefabs"
+import { WebObjectContext } from "../types/Context"
+import { WebObjectEvent } from "../types/Events"
+import { PrefabInstantiationOptions } from "../types/Prefab"
+import WebObjectComponent from "./WebObject"
 
 export interface PrefabComponentProps {
   prefabId: string
   context?: WebObjectContext
   options?: PrefabInstantiationOptions
-  onWebObjectReady?: (element: HTMLElement, webObject: WebObject) => void
-  onWebObjectUpdate?: (element: HTMLElement, webObject: WebObject) => void
-  onPrefabReady?: (webObject: WebObject) => void
-  onPrefabError?: (error: string) => void
+  onEvent?: (event: WebObjectEvent) => void
 }
 
 /**
@@ -23,10 +20,7 @@ const PrefabComponent: React.FC<PrefabComponentProps> = ({
   prefabId,
   context,
   options = {},
-  onWebObjectReady,
-  onWebObjectUpdate,
-  onPrefabReady,
-  onPrefabError,
+  onEvent,
 }) => {
   const { instantiatePrefab, getPrefab } = usePrefabs()
 
@@ -35,17 +29,21 @@ const PrefabComponent: React.FC<PrefabComponentProps> = ({
     try {
       const instance = instantiatePrefab(prefabId, options)
       if (instance) {
-        onPrefabReady?.(instance)
+        onEvent?.({
+          name: "webObject",
+          type: "prefabReady",
+          webObject: instance,
+          timestamp: Date.now(),
+          source: "prefab",
+        })
         return instance
       } else {
-        onPrefabError?.(`Failed to instantiate prefab: ${prefabId}`)
         return null
       }
     } catch (error) {
-      onPrefabError?.(`Error instantiating prefab: ${error}`)
       return null
     }
-  }, [prefabId, options, instantiatePrefab, onPrefabReady, onPrefabError])
+  }, [prefabId, options, instantiatePrefab])
 
   // If instantiation failed, show error or fallback
   if (!webObject) {
@@ -69,8 +67,7 @@ const PrefabComponent: React.FC<PrefabComponentProps> = ({
     <WebObjectComponent
       webObject={webObject}
       context={context}
-      onWebObjectReady={onWebObjectReady}
-      onWebObjectUpdate={onWebObjectUpdate}
+      onEvent={onEvent}
     />
   )
 }

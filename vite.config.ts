@@ -30,6 +30,9 @@ export default defineConfig(({ command }) => {
     return {
       plugins: [react()],
       root: "dev",
+      server: {
+        port: 3000,
+      },
       build: {
         outDir: "../dist-dev",
       },
